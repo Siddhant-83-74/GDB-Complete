@@ -1,0 +1,30 @@
+server:
+  port: ${PORT:8005}
+
+spring:
+  application:
+    name: aadhar-service
+  output:
+    ansi:
+      enabled: ALWAYS
+
+logging:
+  level:
+    root: INFO
+    com.gdb.aadhar: DEBUG
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  file:
+    name: logs/aadhar-service.log
+    max-size: 10MB
+    max-history: 30
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.aadhar.controller

@@ -1,0 +1,25 @@
+server:
+  port: ${PORT:8006}
+
+spring:
+  application:
+    name: company-crv-service
+  output:
+    ansi:
+      enabled: always
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: INFO
+    com.gdb.company: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} - %clr(%-5level) %clr(%logger{0}){cyan} : %msg%n"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs

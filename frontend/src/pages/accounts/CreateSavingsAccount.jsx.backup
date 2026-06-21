@@ -1,0 +1,699 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAccountStore } from '../../store/accountStore';
+import { useNotificationStore } from '../../store/notificationStore';
+import {
+  ArrowLeft,
+  PiggyBank,
+  User,
+  Phone,
+  Calendar,
+  CreditCard,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  BadgeCheck,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+// Mock Aadhar Data for Demo
+const MOCK_AADHAR_DATA = {
+  '123456789012': {
+    name: 'Rajesh Kumar',
+    date_of_birth: '1990-05-15',
+    gender: 'Male',
+    mobile_no: '9876543210',
+    address: '123 MG Road, Bangalore, Karnataka 560001',
+  },
+  '987654321098': {
+    name: 'Priya Sharma',
+    date_of_birth: '1985-08-22',
+    gender: 'Female',
+    mobile_no: '9876543211',
+    address: '456 Park Street, Mumbai, Maharashtra 400001',
+  },
+  '456789123456': {
+    name: 'Amit Patel',
+    date_of_birth: '1992-12-10',
+    gender: 'Male',
+    mobile_no: '9876543212',
+    address: '789 Civil Lines, Delhi 110001',
+  },
+  '111122223333': {
+    name: 'Sneha Reddy',
+    date_of_birth: '1995-03-25',
+    gender: 'Female',
+    mobile_no: '9876543213',
+    address: '321 Jubilee Hills, Hyderabad, Telangana 500033',
+  },
+};
+
+const CreateSavingsAccount = () => {
+  const navigate = useNavigate();
+  const { createSavingsAccount, isLoading } = useAccountStore();
+  const { notifyAccountCreated } = useNotificationStore();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    date_of_birth: '',
+    gender: '',
+    phone_no: '',
+    aadhar_number: '',
+    pin: '',
+    confirmPin: '',
+    privilege: 'SILVER',
+    initial_balance: 2000,
+  });
+
+  const [errors, setErrors] = useState({});
+  const [step, setStep] = useState(1);
+  const [aadharVerified, setAadharVerified] = useState(false);
+  const [verifyingAadhar, setVerifyingAadhar] = useState(false);
+  const [aadharData, setAadharData] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+
+    // Reset Aadhar verification if number changes
+    if (name === 'aadhar_number') {
+      setAadharVerified(false);
+      setAadharData(null);
+    }
+  };
+
+  const validateStep1 = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    if (!formData.date_of_birth) {
+      newErrors.date_of_birth = 'Date of birth is required';
+    } else {
+      const dob = new Date(formData.date_of_birth);
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        newErrors.date_of_birth = 'Account holder must be at least 18 years old';
+      }
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+    }
+
+    if (!formData.phone_no) {
+      newErrors.phone_no = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phone_no)) {
+      newErrors.phone_no = 'Phone number must be 10 digits';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors = {};
+
+    if (!formData.aadhar_number) {
+      newErrors.aadhar_number = 'Aadhar number is required';
+    } else if (!/^\d{12}$/.test(formData.aadhar_number)) {
+      newErrors.aadhar_number = 'Aadhar number must be 12 digits';
+    }
+
+    if (!aadharVerified) {
+      newErrors.aadhar_number = 'Please verify Aadhar number first';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const newErrors = {};
+
+    if (!formData.pin) {
+      newErrors.pin = 'PIN is required';
+    } else if (!/^\d{4}$/.test(formData.pin)) {
+      newErrors.pin = 'PIN must be exactly 4 digits';
+    }
+
+    if (formData.pin !== formData.confirmPin) {
+      newErrors.confirmPin = 'PINs do not match';
+    }
+
+    if (formData.initial_balance < 2000) {
+      newErrors.initial_balance = 'Minimum initial deposit is ₹2,000';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const verifyAadhar = async () => {
+    if (!/^\d{12}$/.test(formData.aadhar_number)) {
+      setErrors({ aadhar_number: 'Aadhar number must be 12 digits' });
+      return;
+    }
+
+    setVerifyingAadhar(true);
+    setErrors({});
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Check mock data
+    const mockData = MOCK_AADHAR_DATA[formData.aadhar_number];
+    
+    if (mockData) {
+      setAadharVerified(true);
+      setAadharData(mockData);
+      
+      // Auto-fill form with Aadhar data
+      setFormData(prev => ({
+        ...prev,
+        name: mockData.name,
+        date_of_birth: mockData.date_of_birth,
+        gender: mockData.gender,
+        phone_no: mockData.mobile_no,
+      }));
+      
+      toast.success('Aadhar verified successfully!');
+    } else {
+      toast.error('Invalid Aadhar number. Use demo numbers.');
+      setErrors({ aadhar_number: 'Aadhar not found. Try: 123456789012' });
+    }
+    
+    setVerifyingAadhar(false);
+  };
+
+  const handleNext = () => {
+    if (step === 1 && validateStep1()) {
+      setStep(2);
+    } else if (step === 2 && validateStep2()) {
+      setStep(3);
+    }
+  };
+
+  const handleBack = () => {
+    setStep(prev => prev - 1);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateStep3()) return;
+
+    try {
+      const account = await createSavingsAccount({
+        name: formData.name,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender,
+        phone_no: formData.phone_no,
+        aadhar_number: formData.aadhar_number,
+        pin: formData.pin,
+        privilege: formData.privilege,
+        initial_balance: parseFloat(formData.initial_balance),
+      });
+
+      // Send notification
+      notifyAccountCreated(
+        account.account_number.toString(),
+        'SAVINGS',
+        formData.name
+      );
+
+      toast.success(`Savings account #${account.account_number} created successfully!`);
+      navigate('/accounts');
+    } catch (error) {
+      toast.error('Failed to create account');
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate('/accounts')}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="page-title">Create Savings Account</h1>
+          <p className="text-gray-500 mt-1">Open a new individual savings account</p>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="card p-6 mb-6">
+        <div className="flex items-center justify-between">
+          {[
+            { num: 1, label: 'Personal Info' },
+            { num: 2, label: 'KYC Verification' },
+            { num: 3, label: 'Account Setup' },
+          ].map((s, i) => (
+            <div key={s.num} className="flex items-center flex-1">
+              <div className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                  step > s.num ? 'bg-green-600 text-white' :
+                  step === s.num ? 'bg-primary-600 text-white' :
+                  'bg-gray-200 text-gray-500'
+                }`}>
+                  {step > s.num ? <CheckCircle className="w-5 h-5" /> : s.num}
+                </div>
+                <span className={`mt-2 text-sm font-medium ${
+                  step >= s.num ? 'text-gray-900' : 'text-gray-400'
+                }`}>
+                  {s.label}
+                </span>
+              </div>
+              {i < 2 && (
+                <div className={`flex-1 h-1 mx-4 rounded ${
+                  step > s.num ? 'bg-green-600' : 'bg-gray-200'
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        {/* Step 1: Personal Information */}
+        {step === 1 && (
+          <div className="card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <User className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
+                <p className="text-sm text-gray-500">Enter the account holder's details</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">
+                  <User className="w-4 h-4" />
+                  Full Name (as per Aadhar)
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter full name"
+                  className={`input w-full ${errors.name ? 'border-red-500' : ''}`}
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {errors.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">
+                    <Calendar className="w-4 h-4" />
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="date_of_birth"
+                    value={formData.date_of_birth}
+                    onChange={handleChange}
+                    className={`input w-full ${errors.date_of_birth ? 'border-red-500' : ''}`}
+                  />
+                  {errors.date_of_birth && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {errors.date_of_birth}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label">Gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className={`input w-full ${errors.gender ? 'border-red-500' : ''}`}
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.gender && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {errors.gender}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="label">
+                  <Phone className="w-4 h-4" />
+                  Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone_no"
+                  value={formData.phone_no}
+                  onChange={handleChange}
+                  placeholder="10 digit mobile number"
+                  maxLength={10}
+                  className={`input w-full ${errors.phone_no ? 'border-red-500' : ''}`}
+                />
+                {errors.phone_no && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {errors.phone_no}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button type="button" onClick={handleNext} className="btn-primary">
+                Continue to KYC
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: KYC - Aadhar Verification */}
+        {step === 2 && (
+          <div className="card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Shield className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">KYC Verification</h2>
+                <p className="text-sm text-gray-500">Verify identity using Aadhar (UIDAI)</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">
+                  <CreditCard className="w-4 h-4" />
+                  Aadhar Number
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="aadhar_number"
+                    value={formData.aadhar_number}
+                    onChange={handleChange}
+                    placeholder="Enter 12-digit Aadhar number"
+                    maxLength={12}
+                    disabled={aadharVerified}
+                    className={`input flex-1 ${errors.aadhar_number ? 'border-red-500' : ''} ${aadharVerified ? 'bg-green-50 border-green-500' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={verifyAadhar}
+                    disabled={verifyingAadhar || aadharVerified || formData.aadhar_number.length !== 12}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      aadharVerified 
+                        ? 'bg-green-600 text-white cursor-default' 
+                        : 'bg-primary-600 text-white hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {verifyingAadhar ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : aadharVerified ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      'Verify'
+                    )}
+                  </button>
+                </div>
+                {errors.aadhar_number && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {errors.aadhar_number}
+                  </p>
+                )}
+              </div>
+
+              {/* Valid Aadhar Numbers for Demo */}
+              {!aadharVerified && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-medium text-blue-800 mb-2">
+                    📋 Demo: Use any of these Aadhar numbers:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(MOCK_AADHAR_DATA).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, aadhar_number: num }));
+                          setAadharVerified(false);
+                          setAadharData(null);
+                        }}
+                        className="px-2 py-1 bg-white text-blue-700 text-xs font-mono rounded border border-blue-300 hover:bg-blue-100"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Verified Aadhar Details */}
+              {aadharVerified && aadharData && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BadgeCheck className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-semibold text-green-800">Aadhar Verified Successfully</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Name:</span>
+                      <p className="font-medium text-gray-900">{aadharData.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Gender:</span>
+                      <p className="font-medium text-gray-900">{aadharData.gender}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">DOB:</span>
+                      <p className="font-medium text-gray-900">{aadharData.date_of_birth}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Mobile:</span>
+                      <p className="font-medium text-gray-900">{aadharData.mobile_no}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-gray-500">Address:</span>
+                      <p className="font-medium text-gray-900">{aadharData.address}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={handleBack} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-6 rounded-lg transition-colors">
+                Back
+              </button>
+              <button 
+                type="button" 
+                onClick={handleNext} 
+                disabled={!aadharVerified}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Continue to Account Setup
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Account Setup */}
+        {step === 3 && (
+          <div className="card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <PiggyBank className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Account Setup</h2>
+                <p className="text-sm text-gray-500">Configure account settings and PIN</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">Account Privilege Level</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {['SILVER', 'GOLD', 'PREMIUM'].map((priv) => (
+                    <button
+                      key={priv}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, privilege: priv }))}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.privilege === priv
+                          ? priv === 'SILVER' ? 'border-gray-400 bg-gray-50' :
+                            priv === 'GOLD' ? 'border-amber-400 bg-amber-50' :
+                            'border-purple-400 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className={`text-sm font-semibold ${
+                        priv === 'SILVER' ? 'text-gray-700' :
+                        priv === 'GOLD' ? 'text-amber-700' :
+                        'text-purple-700'
+                      }`}>
+                        {priv}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">
+                    <Shield className="w-4 h-4" />
+                    Set 4-Digit PIN
+                  </label>
+                  <input
+                    type="password"
+                    name="pin"
+                    value={formData.pin}
+                    onChange={handleChange}
+                    placeholder="••••"
+                    maxLength={4}
+                    className={`input w-full text-center text-2xl tracking-widest ${errors.pin ? 'border-red-500' : ''}`}
+                  />
+                  {errors.pin && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {errors.pin}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label">
+                    <Shield className="w-4 h-4" />
+                    Confirm PIN
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPin"
+                    value={formData.confirmPin}
+                    onChange={handleChange}
+                    placeholder="••••"
+                    maxLength={4}
+                    className={`input w-full text-center text-2xl tracking-widest ${errors.confirmPin ? 'border-red-500' : ''}`}
+                  />
+                  {errors.confirmPin && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {errors.confirmPin}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Initial Deposit Amount (₹)</label>
+                <input
+                  type="number"
+                  name="initial_balance"
+                  value={formData.initial_balance}
+                  onChange={handleChange}
+                  min="2000"
+                  step="100"
+                  className={`input w-full ${errors.initial_balance ? 'border-red-500' : ''}`}
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimum initial deposit: ₹2,000</p>
+                {errors.initial_balance && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {errors.initial_balance}
+                  </p>
+                )}
+              </div>
+
+              {/* Account Summary */}
+              <div className="p-4 bg-gray-50 rounded-lg mt-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Account Holder</span>
+                    <span className="font-medium">{formData.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Account Type</span>
+                    <span className="font-medium">SAVINGS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Privilege</span>
+                    <span className={`font-medium ${
+                      formData.privilege === 'PREMIUM' ? 'text-purple-600' :
+                      formData.privilege === 'GOLD' ? 'text-amber-600' : 'text-gray-600'
+                    }`}>{formData.privilege}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Initial Deposit</span>
+                    <span className="font-medium">₹{formData.initial_balance.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Aadhar</span>
+                    <span className="font-medium text-green-600">✓ Verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-between">
+              <button type="button" onClick={handleBack} className="btn-secondary">
+                Back
+              </button>
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="btn-primary flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Create Account
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </form>
+    </div>
+  );
+};
+
+export default CreateSavingsAccount;

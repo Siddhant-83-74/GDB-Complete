@@ -1,0 +1,43 @@
+server:
+  port: ${PORT:8004}
+  shutdown: graceful
+
+spring:
+  application:
+    name: auth-service
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gdb_auth_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:anil}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+app:
+  jwt:
+    secret: ${JWT_SECRET_KEY:9a4f2c8d3b7a1E9f4g2h6j1k5m9n8p3q7r6s0t4u1v2w7x3y8z9A0B1C2D3E4F5G}
+    access-token-expiration-minutes: ${ACCESS_TOKEN_EXPIRE_MINUTES:30}
+    refresh-token-expiration-days: ${REFRESH_TOKEN_EXPIRE_DAYS:7}
+  services:
+    users-url: ${USERS_SERVICE_URL:http://localhost:8003}
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  level:
+    root: INFO
+    com.gdb.auth: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.auth.controller

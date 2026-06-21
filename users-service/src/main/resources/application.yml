@@ -1,0 +1,47 @@
+server:
+  port: ${PORT:8003}
+
+spring:
+  application:
+    name: users-service
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gdb_users_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:anil}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: false
+
+logging:
+  level:
+    root: INFO
+    com.gdb.users: DEBUG
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  file:
+    name: logs/users-service.log
+    max-size: 10MB
+    max-history: 30
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.users.controller

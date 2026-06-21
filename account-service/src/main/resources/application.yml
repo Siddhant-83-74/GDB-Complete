@@ -1,0 +1,76 @@
+server:
+  port: ${PORT:8001}
+
+spring:
+  application:
+    name: account-service
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gdb_accounts_db}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:anil}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: false
+
+logging:
+  level:
+    root: INFO
+    com.gdb.account: DEBUG
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  file:
+    name: logs/account-service.log
+    max-size: 10MB
+    max-history: 30
+
+# External Service URLs
+external:
+  aadhar-service:
+    # TODO: MOD10-BUG-01: Fallback service port config mismatch.
+    # Trainee task: During local execution, creating a Savings Account fails because the
+    # Aadhar verification service is unreachable. Identify the incorrect port in this fallback URL and fix it.
+    # Injected Bug: Pointing to port 8008 instead of 8005.
+    url: ${AADHAR_SERVICE_URL:http://localhost:8005}
+  company-service:
+    url: ${COMPANY_SERVICE_URL:http://localhost:8006}
+  notification-service:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8007}
+  auth-service:
+    # TODO: MOD12-CR-01: Eureka Service Registry setup.
+    # Trainee task: Configure all microservices as Eureka discovery clients.
+    # 
+    # TODO: MOD12-BUG-01: Load-balanced lookup name mismatch.
+    # Trainee task: Under service discovery mode, calls to auth-service fail with service resolution errors.
+    # Injected Bug: The lookup URL references "http://AUTH-SERVICES" (plural) instead of "http://auth-service" (singular).
+    url: ${AUTH_SERVICE_URL:http://auth-service}
+
+# MOD11-CR-01: Resilience4j retry for the Aadhar client
+resilience4j:
+  retry:
+    instances:
+      aadhar:
+        max-attempts: 3
+        wait-duration: 1s
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.account.controller

@@ -1,0 +1,83 @@
+#server:
+#  port: ${PORT:8002}
+
+spring:
+  application:
+    name: transactions-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  output:
+    ansi:
+      enabled: ALWAYS
+#  datasource:
+#    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/gdb_transactions_db}
+#    username: ${DATABASE_USER:postgres}
+#    password: ${DATABASE_PASSWORD:anil}
+#    driver-class-name: org.postgresql.Driver
+#    hikari:
+#      minimum-idle: 5
+#      maximum-pool-size: 20
+#      connection-timeout: 30000
+#      idle-timeout: 600000
+#      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+#logging:
+#  level:
+#    root: INFO
+#    com.gdb.transactions: DEBUG
+#  pattern:
+#    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+#  file:
+#    name: logs/transactions-service.log
+#    max-size: 10MB
+#    max-history: 30
+
+# External Service URLs
+external:
+  account-service:
+    url: ${ACCOUNT_SERVICE_URL:http://localhost:8001}
+    timeout: 10000
+    retry:
+      max-attempts: 3
+      delay: 1000
+  payment-gateway-service:
+    url: ${PAYMENT_GATEWAY_SERVICE_URL:http://localhost:8008}
+    timeout: 10000
+
+# Transfer Limits Configuration
+transfer:
+  limits:
+    premium:
+      daily-limit: 100000.00
+      transaction-limit: 100
+    gold:
+      daily-limit: 50000.00
+      transaction-limit: 50
+    silver:
+      daily-limit: 50000.00
+      transaction-limit: 10
+
+# TODO: MOD5-CR-01: Profile-Specific YAML Configurations.
+# Trainee task: Reorganize application parameters into application-dev.yml and application-prod.yml.
+# Configure connection parameters and active Tomcat ports profile-specifically.
+
+# MOD5-BUG-01: Banking limits mapping target property
+banking:
+  limits:
+    daily-max: 50000.00
+
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.transactions.controller
