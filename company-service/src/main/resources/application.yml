@@ -23,3 +23,14 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /docs
+
+# --- Eureka service discovery (added by patch_eureka_clients.py) ---
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}

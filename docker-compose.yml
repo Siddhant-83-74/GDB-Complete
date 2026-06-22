@@ -1,0 +1,101 @@
+services:
+  auth-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: gdb_auth_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+  users-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: gdb_users_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+  accounts-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: gdb_accounts_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+  transactions-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: gdb_transactions_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+
+  eureka-server:
+    build: ./eureka-server
+    ports: ["8761:8761"]
+    healthcheck: { test: ["CMD","wget","-qO-","http://localhost:8761/actuator/health"], interval: 10s, retries: 12 }
+
+  gateway-service:
+    build: ./gateway-service
+    ports: ["8080:8080"]
+    environment: { EUREKA_URL: http://eureka-server:8761/eureka }
+    depends_on: { eureka-server: { condition: service_healthy } }
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/gdb_auth_db
+      SPRING_DATASOURCE_USERNAME: gdb
+      SPRING_DATASOURCE_PASSWORD: gdb
+    depends_on:
+      auth-db: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  users-service:
+    build: ./users-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/gdb_users_db
+      SPRING_DATASOURCE_USERNAME: gdb
+      SPRING_DATASOURCE_PASSWORD: gdb
+      AUTH_SERVICE_URL: http://auth-service:8081
+    depends_on:
+      users-db: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  account-service:
+    build: ./account-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://accounts-db:5432/gdb_accounts_db
+      SPRING_DATASOURCE_USERNAME: gdb
+      SPRING_DATASOURCE_PASSWORD: gdb
+      AUTH_SERVICE_URL: http://auth-service:8081
+      AADHAR_SERVICE_URL: http://aadhar-service:8086
+      COMPANY_SERVICE_URL: http://company-service:8087
+    depends_on:
+      accounts-db: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  transactions-service:
+    build: ./transactions-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://transactions-db:5432/gdb_transactions_db
+      SPRING_DATASOURCE_USERNAME: gdb
+      SPRING_DATASOURCE_PASSWORD: gdb
+      AUTH_SERVICE_URL: http://auth-service:8081
+      ACCOUNT_SERVICE_URL: http://account-service:8083
+      PAYMENT_GATEWAY_URL: http://payment-gateway-service:8085
+    depends_on:
+      transactions-db: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  payment-gateway-service:
+    build: ./payment-gateway-service
+    environment: { EUREKA_URL: http://eureka-server:8761/eureka }
+    depends_on: { eureka-server: { condition: service_healthy } }
+
+  aadhar-service:
+    build: ./aadhar-service
+    environment: { EUREKA_URL: http://eureka-server:8761/eureka }
+    depends_on: { eureka-server: { condition: service_healthy } }
+
+  company-service:
+    build: ./company-service
+    environment: { EUREKA_URL: http://eureka-server:8761/eureka }
+    depends_on: { eureka-server: { condition: service_healthy } }
+
+  frontend:
+    build:
+      context: ./frontend
+      args: { VITE_API_BASE_URL: http://localhost:8080 }
+    ports: ["3000:80"]
+    depends_on: { gateway-service: { condition: service_started } }
