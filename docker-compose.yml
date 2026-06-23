@@ -34,6 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/gdb_auth_db
       SPRING_DATASOURCE_USERNAME: gdb
       SPRING_DATASOURCE_PASSWORD: gdb
+      USERS_SERVICE_URL: http://users-service:8080
     depends_on:
       auth-db: { condition: service_healthy }
       eureka-server: { condition: service_healthy }
@@ -96,6 +97,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      args: { VITE_API_BASE_URL: http://localhost:8080 }
+      args: { VITE_API_BASE_URL: http://56.228.9.113:8080 }
     ports: ["3000:80"]
     depends_on: { gateway-service: { condition: service_started } }

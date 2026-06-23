@@ -19,7 +19,7 @@ logging:
     max-size: 10MB
     max-history: 30
 
-# Swagger/OpenAPI Configuration
+
 springdoc:
   api-docs:
     path: /api/v1/api-docs
@@ -29,7 +29,7 @@ springdoc:
     tags-sorter: alpha
   packages-to-scan: com.gdb.aadhar.controller
 
-# --- Eureka service discovery (added by patch_eureka_clients.py) ---
+
 eureka:
   client:
     service-url:

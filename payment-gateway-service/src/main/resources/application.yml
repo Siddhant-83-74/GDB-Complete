@@ -24,7 +24,6 @@ springdoc:
   swagger-ui:
     path: /docs
 
-# --- Eureka service discovery (added by patch_eureka_clients.py) ---
 eureka:
   client:
     service-url:

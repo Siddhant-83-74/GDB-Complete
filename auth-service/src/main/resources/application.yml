@@ -24,7 +24,7 @@ app:
     access-token-expiration-minutes: ${ACCESS_TOKEN_EXPIRE_MINUTES:30}
     refresh-token-expiration-days: ${REFRESH_TOKEN_EXPIRE_DAYS:7}
   services:
-    users-url: ${USERS_SERVICE_URL:http://localhost:8003}
+    users-url: http://users-service:8003
 
 logging:
   pattern:
@@ -42,7 +42,6 @@ springdoc:
     tags-sorter: alpha
   packages-to-scan: com.gdb.auth.controller
 
-# --- Eureka service discovery (added by patch_eureka_clients.py) ---
 eureka:
   client:
     service-url:

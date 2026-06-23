@@ -7,7 +7,6 @@ spring:
 
 eureka:
   client:
-    # A registry does not register with itself
     register-with-eureka: false
     fetch-registry: false
   server:

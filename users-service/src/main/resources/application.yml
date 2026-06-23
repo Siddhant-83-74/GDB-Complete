@@ -46,7 +46,6 @@ springdoc:
     tags-sorter: alpha
   packages-to-scan: com.gdb.users.controller
 
-# --- Eureka service discovery (added by patch_eureka_clients.py) ---
 eureka:
   client:
     service-url:
