@@ -75,6 +75,10 @@ springdoc:
     tags-sorter: alpha
   packages-to-scan: com.gdb.account.controller
 
+app:
+  services:
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:8004}
+    
 eureka:
   client:
     service-url:

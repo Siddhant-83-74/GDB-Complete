@@ -34,7 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/gdb_auth_db
       SPRING_DATASOURCE_USERNAME: gdb
       SPRING_DATASOURCE_PASSWORD: gdb
-      USERS_SERVICE_URL: http://users-service:8080
+      USERS_SERVICE_URL: http://users-service:8003
     depends_on:
       auth-db: { condition: service_healthy }
       eureka-server: { condition: service_healthy }
@@ -46,7 +46,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/gdb_users_db
       SPRING_DATASOURCE_USERNAME: gdb
       SPRING_DATASOURCE_PASSWORD: gdb
-      AUTH_SERVICE_URL: http://auth-service:8081
+      AUTH_SERVICE_URL: http://auth-service:8004
     depends_on:
       users-db: { condition: service_healthy }
       eureka-server: { condition: service_healthy }
@@ -58,9 +58,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://accounts-db:5432/gdb_accounts_db
       SPRING_DATASOURCE_USERNAME: gdb
       SPRING_DATASOURCE_PASSWORD: gdb
-      AUTH_SERVICE_URL: http://auth-service:8081
-      AADHAR_SERVICE_URL: http://aadhar-service:8086
-      COMPANY_SERVICE_URL: http://company-service:8087
+      AUTH_SERVICE_URL: http://auth-service:8004
+      AADHAR_SERVICE_URL: http://aadhar-service:8005
+      COMPANY_SERVICE_URL: http://company-service:8006
     depends_on:
       accounts-db: { condition: service_healthy }
       eureka-server: { condition: service_healthy }
@@ -72,9 +72,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://transactions-db:5432/gdb_transactions_db
       SPRING_DATASOURCE_USERNAME: gdb
       SPRING_DATASOURCE_PASSWORD: gdb
-      AUTH_SERVICE_URL: http://auth-service:8081
-      ACCOUNT_SERVICE_URL: http://account-service:8083
-      PAYMENT_GATEWAY_URL: http://payment-gateway-service:8085
+      AUTH_SERVICE_URL: http://auth-service:8004
+      ACCOUNT_SERVICE_URL: http://account-service:8001
+      PAYMENT_GATEWAY_SERVICE_URL: http://payment-gateway-service:8008
     depends_on:
       transactions-db: { condition: service_healthy }
       eureka-server: { condition: service_healthy }
@@ -97,6 +97,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      args: { VITE_API_BASE_URL: http://56.228.9.113:8080 }
+      args: { VITE_API_BASE_URL: http://localhost:8080 }
     ports: ["3000:80"]
     depends_on: { gateway-service: { condition: service_started } }

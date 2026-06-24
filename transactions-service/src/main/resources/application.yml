@@ -1,5 +1,5 @@
-#server:
-#  port: ${PORT:8002}
+server:
+ port: ${PORT:8002}
 
 spring:
   application:
@@ -82,6 +82,10 @@ springdoc:
     tags-sorter: alpha
   packages-to-scan: com.gdb.transactions.controller
 
+app:
+  services:
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:8004}
+    
 eureka:
   client:
     service-url:

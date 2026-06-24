@@ -19,9 +19,7 @@ spring:
 
         - id: transactions-service
           uri: lb://TRANSACTIONS-SERVICE
-          predicates:
-            - Path=/api/v1/transactions/**
-            - Path=/api/v1/transaction-logs/**
+          predicates: [ "Path=/api/v1/transactions/**,/api/v1/transaction-logs/**,/api/v1/transfer-limits/**" ]
 
         - id: users-service
           uri: lb://USERS-SERVICE
