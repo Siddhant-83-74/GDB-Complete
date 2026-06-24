@@ -44,29 +44,25 @@ public class TransferServiceImpl implements TransferService {
                                 request.getFromAccount(), request.getToAccount(), request.getAmount());
 
                 try {
-                        log.info("Validation of input");
                         // 1. Validate input
                         if (request.getFromAccount().equals(request.getToAccount())) {
                                 throw new TransactionException("SAME_ACCOUNT_TRANSFER",
-                                "Cannot transfer to the same account");
+                                                "Cannot transfer to the same account");
                         }
-                        
-                        log.info("Validation of account");
+
                         // 2. Validate source account exists and is active
                         AccountResponse fromAccount = accountServiceClient.validateAccount(request.getFromAccount());
                         if (!fromAccount.getIsActive()) {
                                 throw new TransactionException("SOURCE_ACCOUNT_INACTIVE",
-                                "Source account is not active");
+                                                "Source account is not active");
                         }
-                        
-                        log.info("Check for sufficient funds");
+
                         // 2.1 Check for sufficient funds
                         if (fromAccount.getBalance() != null
                                         && fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
                                 throw new InsufficientFundsException("Insufficient balance in source account");
                         }
 
-                        log.info("Validate destination account exists and is active");
                         // 3. Validate destination account exists and is active
                         AccountResponse toAccount = accountServiceClient.validateAccount(request.getToAccount());
                         if (!toAccount.getIsActive()) {
