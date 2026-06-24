@@ -3,18 +3,22 @@ services:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_auth_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    volumes: ["auth-db-data:/var/lib/postgresql/data"]
   users-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_users_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    volumes: ["users-db-data:/var/lib/postgresql/data"]
   accounts-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_accounts_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    volumes: ["accounts-db-data:/var/lib/postgresql/data"]
   transactions-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_transactions_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    volumes: ["transactions-db-data:/var/lib/postgresql/data"]
 
   eureka-server:
     build: ./eureka-server
@@ -100,3 +104,8 @@ services:
       args: { VITE_API_BASE_URL: http://localhost:8080 }
     ports: ["3000:80"]
     depends_on: { gateway-service: { condition: service_started } }
+volumes:
+  auth-db-data:
+  users-db-data:
+  accounts-db-data:
+  transactions-db-data:

@@ -15,7 +15,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    baseline-on-migrate: false
     locations: classpath:db/migration
 
 app:
