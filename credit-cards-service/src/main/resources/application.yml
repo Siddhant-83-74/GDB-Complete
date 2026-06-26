@@ -1,0 +1,72 @@
+server:
+  port: ${PORT:8009}
+
+spring:
+  application:
+    name: credit-cards-service
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: ${DATABASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gdb_creditcards_db}}
+    username: ${DATABASE_USER:${SPRING_DATASOURCE_USERNAME:postgres}}
+    password: ${DATABASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:anil}}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+    validate-on-migrate: false
+
+logging:
+  level:
+    root: INFO
+    com.gdb.creditcards: DEBUG
+  file:
+    name: logs/credit-cards-service.log
+    max-size: 10MB
+    max-history: 30
+
+# External Service URLs (service-to-service)
+app:
+  services:
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:8004}
+    account-url: ${ACCOUNT_SERVICE_URL:http://localhost:8001}
+    payment-gateway-url: ${PAYMENT_GATEWAY_SERVICE_URL:http://localhost:8008}
+  # b.6 / b.7 hold thresholds and velocity window
+  rules:
+    high-value-threshold: ${CC_HIGH_VALUE_THRESHOLD:50000}
+    velocity-count: ${CC_VELOCITY_COUNT:3}
+    velocity-window-minutes: ${CC_VELOCITY_WINDOW_MINUTES:5}
+    min-expiry-years: ${CC_MIN_EXPIRY_YEARS:3}
+  # Security (section f): AES key for card-number-at-rest encryption.
+  # 32-char key => AES-256. Override in production via env.
+  crypto:
+    secret: ${CC_CRYPTO_SECRET:gdb-cc-default-aes-key-change-me!}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api/v1/api-docs
+  swagger-ui:
+    path: /api/v1/docs
+    operations-sorter: alpha
+    tags-sorter: alpha
+  packages-to-scan: com.gdb.creditcards.controller

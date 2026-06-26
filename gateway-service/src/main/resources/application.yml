@@ -38,6 +38,11 @@ spring:
           uri: lb://PAYMENT-GATEWAY-SERVICE
           predicates: [ "Path=/api/v1/payment/**" ]
 
+        - id: credit-cards-service
+          uri: lb://CREDIT-CARDS-SERVICE
+          predicates:
+            - Path=/api/v1/credit-cards/**
+
       globalcors:
         cors-configurations:
           '[/**]':

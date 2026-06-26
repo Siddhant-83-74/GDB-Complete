@@ -19,6 +19,11 @@ services:
     environment: { POSTGRES_DB: gdb_transactions_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
     volumes: ["transactions-db-data:/var/lib/postgresql/data"]
+  creditcards-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_DB: gdb_creditcards_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
+    healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    volumes: ["creditcards-db-data:/var/lib/postgresql/data"]
 
   eureka-server:
     build: ./eureka-server
@@ -93,6 +98,20 @@ services:
     environment: { EUREKA_URL: http://eureka-server:8761/eureka }
     depends_on: { eureka-server: { condition: service_healthy } }
 
+  credit-cards-service:
+    build: ./credit-cards-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://creditcards-db:5432/gdb_creditcards_db
+      SPRING_DATASOURCE_USERNAME: gdb
+      SPRING_DATASOURCE_PASSWORD: gdb
+      AUTH_SERVICE_URL: http://auth-service:8004
+      ACCOUNT_SERVICE_URL: http://account-service:8001
+      PAYMENT_GATEWAY_SERVICE_URL: http://payment-gateway-service:8008
+    depends_on:
+      creditcards-db: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
   company-service:
     build: ./company-service
     environment: { EUREKA_URL: http://eureka-server:8761/eureka }
@@ -109,3 +128,4 @@ volumes:
   users-db-data:
   accounts-db-data:
   transactions-db-data:
+  creditcards-db-data:

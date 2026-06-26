@@ -28,6 +28,7 @@ services=(
   "payment-gateway-service:8008"
   "account-service:8001"
   "transactions-service:8002"
+  "credit-cards-service:8009"
   "gateway-service:8080"
 )
 
