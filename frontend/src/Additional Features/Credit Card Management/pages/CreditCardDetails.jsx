@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { creditCardService } from '../services/mockCreditCardService';
+import { creditCardService } from '../services/creditCardsService';
 import { ArrowLeft, Shield, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 

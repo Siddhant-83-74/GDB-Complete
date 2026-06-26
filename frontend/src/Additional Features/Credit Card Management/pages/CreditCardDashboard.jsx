@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { creditCardService } from '../services/mockCreditCardService';
+import { creditCardService } from '../services/creditCardsService';
 import CreditCardWidget from '../components/CreditCardWidget';
 import UtilizationBar from '../components/UtilizationBar';
 import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText } from 'lucide-react';

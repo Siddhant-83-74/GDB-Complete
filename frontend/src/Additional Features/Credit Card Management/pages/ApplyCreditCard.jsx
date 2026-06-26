@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { creditCardService } from '../services/mockCreditCardService';
+import { creditCardService } from '../services/creditCardsService';
 import { Briefcase, IndianRupee, CreditCard, CheckCircle, ArrowLeft, ShieldCheck, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { creditCardService } from '../services/mockCreditCardService';
+import { creditCardService } from '../services/creditCardsService';
 import { ArrowLeft, Search, Filter, ArrowUpDown, ArrowUp, ArrowDown, Download, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
