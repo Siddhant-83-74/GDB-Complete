@@ -73,6 +73,12 @@ public class CreditCardRepositoryImpl implements CreditCardRepository {
     }
 
     @Override
+    public List<CreditCard> findAll() {
+        return jdbcTemplate.query(SqlLoader.get("FIND_ALL_CARDS"),
+                new MapSqlParameterSource(), new CreditCardRowMapper());
+    }
+
+    @Override
     public void updateBalances(String id, BigDecimal availableCredit, BigDecimal outstandingAmount) {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("id", id)
