@@ -86,17 +86,6 @@ const CreditCardWidget = ({ data }) => {
           </div>
         </div>
 
-        {/* Limit / available footer */}
-        <div className="flex justify-between items-center pt-3 mt-1 border-t border-current/20 text-xs">
-          <div className="flex flex-col">
-            <span className="opacity-70">Credit Limit</span>
-            <span className="font-semibold">{inr(data.creditLimit)}</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="opacity-70">Available</span>
-            <span className="font-semibold">{inr(data.availableCredit)}</span>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -135,7 +135,7 @@ const CreditCardTransactions = () => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Credit Card Transactions</h1>
-            <p className="text-sm text-gray-500">Showing activity for the card selected on the dashboard</p>
+            <p className="text-sm text-gray-500">Transaction ledger for the card selected on the administration dashboard</p>
           </div>
         </div>
         <button className="btn-outline flex items-center gap-2">

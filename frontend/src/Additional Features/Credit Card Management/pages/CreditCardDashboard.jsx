@@ -160,7 +160,7 @@ const CreditCardDashboard = () => {
             className="btn-primary flex items-center gap-2 shadow-sm"
           >
             <CreditCard className="w-4 h-4" />
-            Apply New Card
+            Issue New Card
           </button>
         </div>
       </div>
@@ -274,9 +274,9 @@ const CreditCardDashboard = () => {
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md shadow-sm flex items-start">
           <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">Payment Due Soon</h3>
+            <h3 className="text-sm font-medium text-yellow-800">Payment Due Alert</h3>
             <p className="text-sm text-yellow-700 mt-1">
-              Your minimum payment of ₹{data.minimumDue.toLocaleString('en-IN')} is due on {new Date(data.nextDueDate).toLocaleDateString()}. Please pay on time to avoid late fees.
+              Minimum due of ₹{data.minimumDue.toLocaleString('en-IN')} is approaching on {new Date(data.nextDueDate).toLocaleDateString()}. Consider flagging the account or generating a payment reminder.
             </p>
           </div>
         </div>
@@ -286,9 +286,9 @@ const CreditCardDashboard = () => {
         <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md shadow-sm flex items-start mb-4">
           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-green-800">Outstanding Bill: ₹0</h3>
+            <h3 className="text-sm font-medium text-green-800">No Outstanding Balance</h3>
             <p className="text-sm text-green-700 mt-1">
-              You have no pending dues. Please add more money or spend more!
+              This card has zero outstanding amount. No collections action required at this time.
             </p>
           </div>
         </div>
@@ -325,11 +325,11 @@ const CreditCardDashboard = () => {
                   <p className="text-2xl font-bold text-primary-600">₹{data.availableCredit.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Minimum Due</p>
+                  <p className="text-sm text-gray-500">Min. Due (5%)</p>
                   <p className="text-lg font-semibold text-gray-800">₹{data.minimumDue.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Next Due Date</p>
+                  <p className="text-sm text-gray-500">Payment Due By</p>
                   <p className="text-lg font-semibold text-gray-800">{new Date(data.nextDueDate).toLocaleDateString()}</p>
                 </div>
               </div>
@@ -400,13 +400,13 @@ const CreditCardDashboard = () => {
       ) : !loading && cards.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
           <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No active credit card</h3>
-          <p className="text-gray-500 mt-2 mb-6">Apply for a new credit card to get started.</p>
+          <h3 className="text-lg font-medium text-gray-900">No Cards in Portfolio</h3>
+          <p className="text-gray-500 mt-2 mb-6">No credit cards have been issued yet. Issue a new card to begin managing the portfolio.</p>
           <button
             onClick={() => navigate('/credit-cards/apply')}
             className="btn-primary"
           >
-            Apply Now
+            Issue New Card
           </button>
         </div>
       ) : null}
