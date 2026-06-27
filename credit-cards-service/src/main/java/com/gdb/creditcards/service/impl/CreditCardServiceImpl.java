@@ -80,7 +80,6 @@ public class CreditCardServiceImpl implements CreditCardService {
                 .sourcingBranchCode(request.getSourcingBranchCode())
                 .kycDocumentName(request.getKycDocumentName())
                 .incomeDocumentName(request.getIncomeDocumentName())
-                .applicantPhotoCaptured(Boolean.TRUE.equals(request.getApplicantPhotoCaptured()))
                 .build();
 
         // b.14: optional account mapping at creation, verified via Account Service

@@ -71,8 +71,8 @@ public class DataInitializer implements CommandLineRunner {
                     cvv_hash, expiry_date, credit_limit, available_credit, outstanding_amount,
                     international_enabled, status,
                     consent_source, otp_verified, lead_source, sourcing_branch_code,
-                    kyc_document_name, income_document_name, applicant_photo_captured)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    kyc_document_name, income_document_name)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 id, userId, name, mobile,
                 cryptoUtil.encrypt(pan), pan.substring(0, 6), pan.substring(pan.length() - 4), vendor, category,
@@ -81,7 +81,7 @@ public class DataInitializer implements CommandLineRunner {
                 false, CreditCardConstants.STATUS_ACTIVE,
                 "PHYSICAL_FORM,DIGITAL_SIGNATURE", true, leadSource, branchCode,
                 "kyc_" + name.toLowerCase().replace(" ", "_") + ".pdf",
-                "income_" + name.toLowerCase().replace(" ", "_") + ".pdf", true);
+                "income_" + name.toLowerCase().replace(" ", "_") + ".pdf");
 
         seedTransactions(id, outstanding, txnCount);
     }

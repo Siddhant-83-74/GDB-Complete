@@ -36,7 +36,6 @@ public class CreditCardRowMapper implements RowMapper<CreditCard> {
                 .sourcingBranchCode(rs.getString("sourcing_branch_code"))
                 .kycDocumentName(rs.getString("kyc_document_name"))
                 .incomeDocumentName(rs.getString("income_document_name"))
-                .applicantPhotoCaptured(rs.getBoolean("applicant_photo_captured"))
                 .createdAt(rs.getTimestamp("created_at") != null
                         ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null)

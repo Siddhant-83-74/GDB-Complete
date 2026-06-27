@@ -52,7 +52,6 @@ public class CreditCard {
     private String sourcingBranchCode;   // physical branch/hub credited with the application
     private String kycDocumentName;      // uploaded KYC scan reference
     private String incomeDocumentName;   // uploaded income proof scan reference
-    private Boolean applicantPhotoCaptured; // live photograph / video-KYC captured
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

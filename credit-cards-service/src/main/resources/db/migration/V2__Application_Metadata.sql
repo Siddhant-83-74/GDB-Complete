@@ -7,5 +7,4 @@ ALTER TABLE credit_cards
     ADD COLUMN IF NOT EXISTS lead_source VARCHAR(40),              -- BRANCH / COLD_CALL / DIGITAL_CAMPAIGN
     ADD COLUMN IF NOT EXISTS sourcing_branch_code VARCHAR(20),
     ADD COLUMN IF NOT EXISTS kyc_document_name VARCHAR(255),
-    ADD COLUMN IF NOT EXISTS income_document_name VARCHAR(255),
-    ADD COLUMN IF NOT EXISTS applicant_photo_captured BOOLEAN NOT NULL DEFAULT FALSE;
+    ADD COLUMN IF NOT EXISTS income_document_name VARCHAR(255);

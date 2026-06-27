@@ -48,9 +48,7 @@ public class CreditCardRepositoryImpl implements CreditCardRepository {
                 .addValue("leadSource", card.getLeadSource())
                 .addValue("sourcingBranchCode", card.getSourcingBranchCode())
                 .addValue("kycDocumentName", card.getKycDocumentName())
-                .addValue("incomeDocumentName", card.getIncomeDocumentName())
-                .addValue("applicantPhotoCaptured",
-                        card.getApplicantPhotoCaptured() != null && card.getApplicantPhotoCaptured());
+                .addValue("incomeDocumentName", card.getIncomeDocumentName());
         jdbcTemplate.update(SqlLoader.get("SAVE_CARD"), params);
         return card;
     }

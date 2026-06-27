@@ -5,7 +5,7 @@ INSERT INTO credit_cards (
         cvv_hash, expiry_date, credit_limit, available_credit, outstanding_amount,
         linked_account_number, international_enabled, status,
         consent_source, otp_verified, lead_source, sourcing_branch_code,
-        kyc_document_name, income_document_name, applicant_photo_captured
+        kyc_document_name, income_document_name
     )
 VALUES (
         :id, :userId, :cardHolderName, :mobileNumber,
@@ -13,7 +13,7 @@ VALUES (
         :cvvHash, :expiryDate, :creditLimit, :availableCredit, :outstandingAmount,
         :linkedAccountNumber, :internationalEnabled, :status,
         :consentSource, :otpVerified, :leadSource, :sourcingBranchCode,
-        :kycDocumentName, :incomeDocumentName, :applicantPhotoCaptured
+        :kycDocumentName, :incomeDocumentName
     );
 -- FIND_CARD_BY_ID
 SELECT *

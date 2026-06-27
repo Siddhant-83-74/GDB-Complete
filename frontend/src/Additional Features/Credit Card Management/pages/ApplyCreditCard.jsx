@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { creditCardService } from '../services/creditCardsService';
 import {
-  User, Phone, CreditCard, CheckCircle, ArrowLeft, ShieldCheck, Star,
-  FileSignature, KeyRound, Building2, Upload, Camera, FileText, RefreshCw,
+  User, Phone, CreditCard, CheckCircle, ArrowLeft, ShieldCheck,
+  FileSignature, KeyRound, Building2, Upload, FileText,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -46,14 +46,6 @@ const ApplyCreditCard = () => {
   const [otpInput, setOtpInput] = useState('');
   const [otpVerified, setOtpVerified] = useState(false);
 
-  // --- Live photo state --------------------------------------------------
-  const [photoCaptured, setPhotoCaptured] = useState(false);
-  const [cameraOn, setCameraOn] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState('');
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const streamRef = useRef(null);
-
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
   // ---- OTP handlers -----------------------------------------------------
@@ -79,45 +71,6 @@ const ApplyCreditCard = () => {
     }
   };
 
-  // ---- Webcam handlers --------------------------------------------------
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      setCameraOn(true);
-      // attach after the <video> renders
-      setTimeout(() => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      }, 0);
-    } catch (e) {
-      toast.error('Webcam unavailable. Use a Video-KYC link instead.');
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setCameraOn(false);
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-    canvas.width = video.videoWidth || 320;
-    canvas.height = video.videoHeight || 240;
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    setPhotoUrl(canvas.toDataURL('image/jpeg', 0.8));
-    setPhotoCaptured(true);
-    stopCamera();
-    toast.success('Live photograph captured');
-  };
-
-  // cleanup camera on unmount
-  useEffect(() => () => stopCamera(), []);
-
   // ---- Validation -------------------------------------------------------
   const validate = () => {
     const e = {};
@@ -131,7 +84,6 @@ const ApplyCreditCard = () => {
     if (!form.sourcingBranchCode) e.sourcingBranchCode = 'Sourcing branch code is required';
     if (!form.kycDocumentName) e.kycDocumentName = 'Upload the KYC document scan';
     if (!form.incomeDocumentName) e.incomeDocumentName = 'Upload the income document scan';
-    if (!photoCaptured) e.photo = 'Capture a live photograph / video-KYC';
     return e;
   };
 
@@ -158,7 +110,6 @@ const ApplyCreditCard = () => {
       const res = await creditCardService.applyForCard({
         ...form,
         otpVerified,
-        applicantPhotoCaptured: photoCaptured,
       });
       if (res.success) {
         toast.success('Application Submitted Successfully!');
@@ -365,50 +316,6 @@ const ApplyCreditCard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FileField label="KYC Document Scan *" field="kycDocumentName" form={form} set={set} error={errors.kycDocumentName} />
                 <FileField label="Income Document Scan *" field="incomeDocumentName" form={form} set={set} error={errors.incomeDocumentName} />
-              </div>
-
-              {/* Live photograph */}
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Camera className="w-4 h-4 text-primary-600" />
-                  <h3 className="text-sm font-semibold text-gray-800">Live Photograph / Video-KYC *</h3>
-                  {photoCaptured && (
-                    <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                      <CheckCircle className="w-3.5 h-3.5" /> Captured
-                    </span>
-                  )}
-                </div>
-
-                {!cameraOn && !photoCaptured && (
-                  <button type="button" onClick={startCamera}
-                    className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Start Camera
-                  </button>
-                )}
-
-                {cameraOn && (
-                  <div className="space-y-3">
-                    <video ref={videoRef} autoPlay playsInline className="rounded-lg w-64 border border-gray-300" />
-                    <div className="flex gap-3">
-                      <button type="button" onClick={capturePhoto} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 flex items-center gap-2">
-                        <Camera className="w-4 h-4" /> Capture
-                      </button>
-                      <button type="button" onClick={stopCamera} className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-100">Cancel</button>
-                    </div>
-                  </div>
-                )}
-
-                {photoCaptured && photoUrl && (
-                  <div className="flex items-center gap-4">
-                    <img src={photoUrl} alt="Applicant" className="w-28 h-28 object-cover rounded-lg border border-gray-300" />
-                    <button type="button" onClick={() => { setPhotoCaptured(false); setPhotoUrl(''); startCamera(); }}
-                      className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-100 flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4" /> Retake
-                    </button>
-                  </div>
-                )}
-                <canvas ref={canvasRef} className="hidden" />
-                {errors.photo && <p className="mt-2 text-sm text-red-500">{errors.photo}</p>}
               </div>
             </div>
 

@@ -87,9 +87,4 @@ public class ApplyCardRequest {
     @NotBlank(message = "Income document scan is required")
     @JsonProperty("income_document_name")
     private String incomeDocumentName;
-
-    @NotNull(message = "Live photograph capture status is required")
-    @AssertTrue(message = "A live photograph / video-KYC of the applicant is required")
-    @JsonProperty("applicant_photo_captured")
-    private Boolean applicantPhotoCaptured;
 }

@@ -72,9 +72,6 @@ public class CreditCardResponse {
     @JsonProperty("income_document_name")
     private String incomeDocumentName;
 
-    @JsonProperty("applicant_photo_captured")
-    private Boolean applicantPhotoCaptured;
-
     @JsonProperty("service_limits")
     private List<ServiceLimitView> serviceLimits;
 

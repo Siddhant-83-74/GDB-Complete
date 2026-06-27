@@ -119,7 +119,6 @@ const CreditCardDetails = () => {
                 <MetaItem label="OTP Verified" value={data.otpVerified ? 'Yes' : 'No'} badge={data.otpVerified ? 'green' : 'red'} />
                 <MetaItem label="KYC Document" value={data.kycDocumentName} />
                 <MetaItem label="Income Document" value={data.incomeDocumentName} />
-                <MetaItem label="Live Photograph" value={data.applicantPhotoCaptured ? 'Captured' : 'Not captured'} badge={data.applicantPhotoCaptured ? 'green' : 'red'} />
               </div>
               <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">Payment Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">

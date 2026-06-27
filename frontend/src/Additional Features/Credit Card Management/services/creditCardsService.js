@@ -83,7 +83,6 @@ const adaptCard = (c) => {
     sourcingBranchCode: c.sourcing_branch_code,
     kycDocumentName: c.kyc_document_name,
     incomeDocumentName: c.income_document_name,
-    applicantPhotoCaptured: c.applicant_photo_captured,
   };
 };
 
@@ -191,7 +190,6 @@ export const creditCardService = {
       // Section 4 — Document Uploads
       kyc_document_name: applicationData.kycDocumentName,
       income_document_name: applicationData.incomeDocumentName,
-      applicant_photo_captured: !!applicationData.applicantPhotoCaptured,
     };
 
     try {

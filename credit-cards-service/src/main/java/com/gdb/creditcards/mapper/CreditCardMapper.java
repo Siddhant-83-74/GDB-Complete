@@ -48,7 +48,6 @@ public final class CreditCardMapper {
                 .sourcingBranchCode(card.getSourcingBranchCode())
                 .kycDocumentName(card.getKycDocumentName())
                 .incomeDocumentName(card.getIncomeDocumentName())
-                .applicantPhotoCaptured(card.getApplicantPhotoCaptured())
                 .serviceLimits(limitViews)
                 .build();
     }
