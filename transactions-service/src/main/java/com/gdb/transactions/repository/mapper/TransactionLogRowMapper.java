@@ -25,6 +25,7 @@ public class TransactionLogRowMapper implements RowMapper<TransactionLog> {
                 .description(rs.getString("description"))
                 .mode(rs.getString("mode"))
                 .status(rs.getString("status"))
+                .suspicious(rs.getBoolean("suspicious"))
                 .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
                 .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
                 .build();

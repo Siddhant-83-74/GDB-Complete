@@ -22,18 +22,38 @@ import {
   TrendingUp,
   TrendingDown,
   Loader2,
+  AlertTriangle,
+  Flag,
 } from 'lucide-react';
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
 const TransactionsPage = () => {
   const navigate = useNavigate();
   const { hasRole } = useAuthStore();
-  const { transactions, isLoading, fetchTransactions } = useTransactionStore();
+  const { transactions, isLoading, fetchTransactions, flagTransaction } = useTransactionStore();
   const { accounts, fetchAccounts } = useAccountStore();
+
+  // Admin, Manager and Teller can manually flag transactions as suspicious
+  const canFlag = hasRole(['ADMIN', 'MANAGER', 'TELLER']);
+  const [flaggingId, setFlaggingId] = useState(null);
+
+  const handleToggleSuspicious = async (txn, e) => {
+    e.stopPropagation();
+    if (!txn.id) return;
+    setFlaggingId(txn.id);
+    try {
+      await flagTransaction(txn.id, !txn.suspicious);
+    } catch (error) {
+      console.error('Failed to update suspicious flag:', error);
+    } finally {
+      setFlaggingId(null);
+    }
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [suspiciousOnly, setSuspiciousOnly] = useState(false);
   const [dateRange, setDateRange] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -101,6 +121,9 @@ const TransactionsPage = () => {
     const txnStatus = (txn.status || '').toUpperCase();
     const matchesStatus = statusFilter === 'ALL' || txnStatus === statusFilter.toUpperCase();
 
+    // Suspicious filter
+    const matchesSuspicious = !suspiciousOnly || txn.suspicious === true;
+
     let matchesDate = true;
     if (dateRange !== 'ALL') {
       try {
@@ -131,7 +154,7 @@ const TransactionsPage = () => {
       }
     }
 
-    return matchesSearch && matchesType && matchesStatus && matchesDate;
+    return matchesSearch && matchesType && matchesStatus && matchesSuspicious && matchesDate;
   });
 
   // Sort by date (newest first)
@@ -383,10 +406,24 @@ const TransactionsPage = () => {
               </select>
 
               <button
+                onClick={() => setSuspiciousOnly(!suspiciousOnly)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  suspiciousOnly
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+                title="Show only flagged transactions"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Suspicious
+              </button>
+
+              <button
                 onClick={() => {
                   setSearchTerm('');
                   setTypeFilter('ALL');
                   setStatusFilter('ALL');
+                  setSuspiciousOnly(false);
                   setDateRange('ALL');
                 }}
                 className="btn-secondary flex items-center gap-2"
@@ -429,7 +466,11 @@ const TransactionsPage = () => {
               return (
               <div
                 key={txn.id || txn.transaction_id || txn.reference_id}
-                className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                className={`p-4 transition-colors cursor-pointer ${
+                  txn.suspicious
+                    ? 'bg-amber-50 hover:bg-amber-100 border-l-4 border-amber-400'
+                    : 'hover:bg-gray-50'
+                }`}
                 onClick={() => {/* View transaction details */}}
               >
                 <div className="flex items-center justify-between">
@@ -444,6 +485,11 @@ const TransactionsPage = () => {
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900">{displayType}</p>
                         <span className="text-xs text-gray-400">#{txn.reference_id || txn.transaction_id || txn.id}</span>
+                        {txn.suspicious && (
+                          <span className="badge bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center">
+                            <AlertTriangle className="w-3 h-3 mr-1" /> Suspicious
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 mt-0.5">
                         {isTransfer ? (
@@ -477,6 +523,24 @@ const TransactionsPage = () => {
                       </p>
                     </div>
                     {getStatusBadge(txn.status || 'SUCCESS')}
+                    {canFlag && txn.id && (
+                      <button
+                        onClick={(e) => handleToggleSuspicious(txn, e)}
+                        disabled={flaggingId === txn.id}
+                        title={txn.suspicious ? 'Clear suspicious flag' : 'Mark as suspicious'}
+                        className={`p-2 rounded-lg border transition-colors disabled:opacity-50 ${
+                          txn.suspicious
+                            ? 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200'
+                            : 'bg-white text-gray-400 border-gray-200 hover:text-amber-600 hover:border-amber-300'
+                        }`}
+                      >
+                        {flaggingId === txn.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Flag className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

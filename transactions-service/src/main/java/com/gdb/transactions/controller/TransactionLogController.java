@@ -55,6 +55,55 @@ public class TransactionLogController {
                 return ResponseEntity.ok(response);
         }
 
+        @GetMapping("/transaction-logs/suspicious")
+        @Operation(summary = "Get suspicious transactions", description = "Retrieve all transactions flagged as suspicious")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Suspicious transactions retrieved successfully"),
+                        @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        public ResponseEntity<Map<String, Object>> getSuspiciousTransactions(
+                        @Parameter(description = "Maximum records to return") @RequestParam(defaultValue = "100") int limit,
+                        @Parameter(description = "Pagination offset") @RequestParam(defaultValue = "0") int offset) {
+                SecurityUtils.checkManagerRole();
+                log.info("Received request to get suspicious transactions with limit: {}, offset: {}", limit, offset);
+
+                List<TransactionLogResponse> transactions = transactionLogService.getSuspiciousTransactions(limit, offset);
+                Long total = transactionLogService.getSuspiciousCount();
+
+                Map<String, Object> response = Map.of(
+                                "logs", transactions,
+                                "total", total,
+                                "limit", limit,
+                                "offset", offset);
+
+                return ResponseEntity.ok(response);
+        }
+
+        @PatchMapping("/transaction-logs/{id}/flag")
+        @Operation(summary = "Flag/unflag a transaction", description = "Manually set the suspicious flag on a transaction")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Transaction flag updated successfully"),
+                        @ApiResponse(responseCode = "404", description = "Transaction not found"),
+                        @ApiResponse(responseCode = "500", description = "Internal server error")
+        })
+        public ResponseEntity<Map<String, Object>> flagTransaction(
+                        @Parameter(description = "Transaction log id", required = true) @PathVariable Long id,
+                        @Parameter(description = "Whether the transaction is suspicious") @RequestParam(defaultValue = "true") boolean suspicious) {
+                SecurityUtils.checkManagerRole();
+                log.info("Received request to set suspicious={} for transaction: {}", suspicious, id);
+
+                boolean updated = transactionLogService.flagTransaction(id, suspicious);
+                if (!updated) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                Map<String, Object> response = Map.of(
+                                "id", id,
+                                "suspicious", suspicious);
+
+                return ResponseEntity.ok(response);
+        }
+
         @GetMapping({ "/transaction-logs/{accountNumber}", "/transactions/account/{accountNumber}" })
         @Operation(summary = "Get account transaction logs", description = "Retrieve transaction history for specific account")
         @ApiResponses(value = {

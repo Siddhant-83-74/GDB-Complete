@@ -71,6 +71,24 @@ export const useTransactionStore = create((set, get) => ({
     }
   },
 
+  // Flag/unflag a transaction as suspicious
+  flagTransaction: async (id, suspicious) => {
+    try {
+      await transactionsService.flag(id, suspicious);
+      // Optimistically update local state
+      set(state => ({
+        transactions: state.transactions.map(txn =>
+          txn.id === id ? { ...txn, suspicious } : txn
+        ),
+      }));
+      return true;
+    } catch (error) {
+      console.error('Failed to update suspicious flag:', error.message);
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
   // Process deposit
   processDeposit: async (accountNumber, amount, description, pin) => {
     set({ isLoading: true, error: null });
