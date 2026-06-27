@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { creditCardService, selectedCard } from '../services/creditCardsService';
 import CreditCardWidget from '../components/CreditCardWidget';
 import UtilizationBar from '../components/UtilizationBar';
-import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText } from 'lucide-react';
+import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText, BarChart3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CreditCardDashboard = () => {
@@ -122,6 +122,14 @@ const CreditCardDashboard = () => {
             </div>
           )}
 
+
+          <button
+            onClick={() => navigate('/credit-cards/analytics')}
+            className="btn-outline flex items-center gap-2 shadow-sm"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </button>
 
           <button
             onClick={() => navigate('/credit-cards/apply')}

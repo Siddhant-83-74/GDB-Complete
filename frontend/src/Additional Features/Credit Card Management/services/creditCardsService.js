@@ -204,6 +204,15 @@ export const creditCardService = {
     }
   },
 
+  getPortfolioAnalytics: async () => {
+    try {
+      const { data } = await creditCardsApi.get(`${BASE}/analytics/portfolio`);
+      return data;
+    } catch (error) {
+      throw new Error(errMsg(error, 'Failed to load analytics'));
+    }
+  },
+
   payBill: async (paymentData, cardId = null) => {
     if (!paymentData.amount || paymentData.amount <= 0) {
       throw new Error('Invalid payment amount');

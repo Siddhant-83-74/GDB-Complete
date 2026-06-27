@@ -44,6 +44,7 @@ import CreditCardDashboard from './Additional Features/Credit Card Management/pa
 import ApplyCreditCard from './Additional Features/Credit Card Management/pages/ApplyCreditCard';
 import CreditCardDetails from './Additional Features/Credit Card Management/pages/CreditCardDetails';
 import CreditCardTransactions from './Additional Features/Credit Card Management/pages/CreditCardTransactions';
+import CreditCardAnalytics from './Additional Features/Credit Card Management/pages/CreditCardAnalytics';
 import PayCreditCardBill from './Additional Features/Credit Card Management/pages/PayCreditCardBill';
 import PaymentSuccess from './Additional Features/Credit Card Management/pages/PaymentSuccess';
 import ApplicationSuccess from './Additional Features/Credit Card Management/pages/ApplicationSuccess';
@@ -244,6 +245,7 @@ function App() {
           <Route path="/credit-cards/apply" element={<ApplyCreditCard />} />
           <Route path="/credit-cards/details" element={<CreditCardDetails />} />
           <Route path="/credit-cards/transactions" element={<CreditCardTransactions />} />
+          <Route path="/credit-cards/analytics" element={<CreditCardAnalytics />} />
           <Route path="/credit-cards/pay" element={<PayCreditCardBill />} />
           <Route path="/credit-cards/payment-success" element={<PaymentSuccess />} />
           <Route path="/credit-cards/application-success" element={<ApplicationSuccess />} />
