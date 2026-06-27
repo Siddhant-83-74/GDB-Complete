@@ -47,12 +47,46 @@ const ChartCard = ({ title, children, className = '' }) => (
   </div>
 );
 
+// Reusable table pager (windowed numbered buttons + prev/next)
+const Pager = ({ page, totalPages, onChange, label }) => {
+  if (totalPages <= 1) return null;
+  const windowSize = Math.min(5, totalPages);
+  let start;
+  if (totalPages <= 5) start = 1;
+  else if (page <= 3) start = 1;
+  else if (page >= totalPages - 2) start = totalPages - 4;
+  else start = page - 2;
+  const pages = Array.from({ length: windowSize }, (_, i) => start + i);
+  return (
+    <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span className="text-xs text-gray-500">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => onChange(page - 1)} disabled={page === 1}
+          className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+        {pages.map((p) => (
+          <button key={p} onClick={() => onChange(p)}
+            className={`px-3 py-1 rounded-md text-sm border ${p === page ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>{p}</button>
+        ))}
+        <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+      </div>
+    </div>
+  );
+};
+
 const CreditCardAnalytics = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [allCards, setAllCards] = useState([]);
   const [cardQuery, setCardQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [topPage, setTopPage] = useState(1);
+  const [allPage, setAllPage] = useState(1);
+  const TOP_PAGE_SIZE = 6;
+  const ALL_PAGE_SIZE = 8;
+
+  // Reset the All Cards table to page 1 whenever the search changes
+  useEffect(() => { setAllPage(1); }, [cardQuery]);
 
   const load = async () => {
     try {
@@ -94,6 +128,27 @@ const CreditCardAnalytics = () => {
   }));
   const topCards = data.top_cards_by_utilization || [];
   const utilization = Number(s.overall_utilization || 0);
+
+  // Filter (All Cards search) + paginate both report tables
+  const filteredCards = allCards.filter((c) => {
+    const q = cardQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (c.cardHolderName || '').toLowerCase().includes(q) ||
+      (c.cardNumber || '').toLowerCase().includes(q) ||
+      (c.vendor || '').toLowerCase().includes(q) ||
+      (c.cardType || '').toLowerCase().includes(q) ||
+      (c.status || '').toLowerCase().includes(q)
+    );
+  });
+
+  const topTotalPages = Math.max(1, Math.ceil(topCards.length / TOP_PAGE_SIZE));
+  const topPageSafe = Math.min(topPage, topTotalPages);
+  const pagedTopCards = topCards.slice((topPageSafe - 1) * TOP_PAGE_SIZE, topPageSafe * TOP_PAGE_SIZE);
+
+  const allTotalPages = Math.max(1, Math.ceil(filteredCards.length / ALL_PAGE_SIZE));
+  const allPageSafe = Math.min(allPage, allTotalPages);
+  const pagedAllCards = filteredCards.slice((allPageSafe - 1) * ALL_PAGE_SIZE, allPageSafe * ALL_PAGE_SIZE);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
@@ -245,7 +300,7 @@ const CreditCardAnalytics = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {topCards.map((c) => {
+              {pagedTopCards.map((c) => {
                 const u = Number(c.utilization);
                 return (
                   <tr key={c.id} className="hover:bg-gray-50">
@@ -277,6 +332,12 @@ const CreditCardAnalytics = () => {
             </tbody>
           </table>
         </div>
+        <Pager
+          page={topPageSafe}
+          totalPages={topTotalPages}
+          onChange={setTopPage}
+          label={`Showing ${(topPageSafe - 1) * TOP_PAGE_SIZE + 1}-${Math.min(topPageSafe * TOP_PAGE_SIZE, topCards.length)} of ${topCards.length}`}
+        />
       </div>
 
       {/* Full portfolio — every card */}
@@ -308,19 +369,7 @@ const CreditCardAnalytics = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {allCards
-                .filter((c) => {
-                  const q = cardQuery.trim().toLowerCase();
-                  if (!q) return true;
-                  return (
-                    (c.cardHolderName || '').toLowerCase().includes(q) ||
-                    (c.cardNumber || '').toLowerCase().includes(q) ||
-                    (c.vendor || '').toLowerCase().includes(q) ||
-                    (c.cardType || '').toLowerCase().includes(q) ||
-                    (c.status || '').toLowerCase().includes(q)
-                  );
-                })
-                .map((c) => {
+              {pagedAllCards.map((c) => {
                   const u = c.creditLimit > 0 ? Math.round((c.outstandingAmount / c.creditLimit) * 100) : 0;
                   const statusColor = c.status === 'Active' ? 'bg-green-100 text-green-700'
                     : c.status === 'Blocked' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600';
@@ -354,12 +403,20 @@ const CreditCardAnalytics = () => {
                     </tr>
                   );
                 })}
-              {allCards.length === 0 && (
-                <tr><td colSpan="10" className="px-6 py-10 text-center text-gray-500 text-sm">No cards in portfolio</td></tr>
+              {filteredCards.length === 0 && (
+                <tr><td colSpan="10" className="px-6 py-10 text-center text-gray-500 text-sm">
+                  {cardQuery ? 'No cards match your search' : 'No cards in portfolio'}
+                </td></tr>
               )}
             </tbody>
           </table>
         </div>
+        <Pager
+          page={allPageSafe}
+          totalPages={allTotalPages}
+          onChange={setAllPage}
+          label={`Showing ${filteredCards.length === 0 ? 0 : (allPageSafe - 1) * ALL_PAGE_SIZE + 1}-${Math.min(allPageSafe * ALL_PAGE_SIZE, filteredCards.length)} of ${filteredCards.length}`}
+        />
       </div>
     </div>
   );
