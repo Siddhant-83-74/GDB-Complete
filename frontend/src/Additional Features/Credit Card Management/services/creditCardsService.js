@@ -124,6 +124,17 @@ export const creditCardService = {
     }
   },
 
+  // Whole-portfolio listing (single source of truth shared with analytics).
+  // Used by the admin card selector so the dropdown matches the analytics totals.
+  getAllCardsPortfolio: async () => {
+    try {
+      const { data } = await creditCardsApi.get(BASE);
+      return (data || []).map(adaptCard);
+    } catch (error) {
+      throw new Error(errMsg(error, 'Failed to fetch portfolio cards'));
+    }
+  },
+
   getDashboardData: async (cardId = null) => {
     try {
       const targetCardId = cardId || selectedCard.get();

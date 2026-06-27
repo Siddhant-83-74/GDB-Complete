@@ -105,6 +105,13 @@ public class CreditCardServiceImpl implements CreditCardService {
     }
 
     @Override
+    public List<CreditCardResponse> listAll() {
+        return cardRepository.findAll().stream()
+                .map(c -> CreditCardMapper.toResponse(c, cardRepository.findServiceLimits(c.getId())))
+                .toList();
+    }
+
+    @Override
     public CreditCardResponse getById(String id) {
         CreditCard card = requireCard(id);
         return CreditCardMapper.toResponse(card, cardRepository.findServiceLimits(id));

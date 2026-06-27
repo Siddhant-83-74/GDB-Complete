@@ -34,6 +34,12 @@ public class CreditCardController {
         return ResponseEntity.ok(cardService.listByUser(userId));
     }
 
+    /** Whole-portfolio listing for the admin card selector (single source of truth with analytics). */
+    @GetMapping
+    public ResponseEntity<List<CreditCardResponse>> listAllCards() {
+        return ResponseEntity.ok(cardService.listAll());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CreditCardResponse> getCardDetails(@PathVariable String id) {
         return ResponseEntity.ok(cardService.getById(id));

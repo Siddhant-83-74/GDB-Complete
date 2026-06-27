@@ -18,6 +18,9 @@ public interface CreditCardRepository {
 
     List<CreditCard> findByUserId(Long userId);
 
+    /** Every card in the portfolio (admin command center). */
+    List<CreditCard> findAll();
+
     void updateBalances(String id, BigDecimal availableCredit, BigDecimal outstandingAmount);
 
     void updateStatus(String id, String status);
