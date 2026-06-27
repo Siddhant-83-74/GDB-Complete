@@ -3,26 +3,31 @@ services:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_auth_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    ports: ["5433:5432"]
     volumes: ["auth-db-data:/var/lib/postgresql/data"]
   users-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_users_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    ports: ["5434:5432"]
     volumes: ["users-db-data:/var/lib/postgresql/data"]
   accounts-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_accounts_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    ports: ["5435:5432"]
     volumes: ["accounts-db-data:/var/lib/postgresql/data"]
   transactions-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_transactions_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    ports: ["5436:5432"]
     volumes: ["transactions-db-data:/var/lib/postgresql/data"]
   creditcards-db:
     image: postgres:16-alpine
     environment: { POSTGRES_DB: gdb_creditcards_db, POSTGRES_USER: gdb, POSTGRES_PASSWORD: gdb }
     healthcheck: { test: ["CMD-SHELL","pg_isready -U gdb"], interval: 5s, retries: 10 }
+    ports: ["5437:5432"]
     volumes: ["creditcards-db-data:/var/lib/postgresql/data"]
 
   eureka-server:
