@@ -27,6 +27,14 @@ const monthLabel = (ym) => {
   return d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
 };
 
+const CHANNEL_LABELS = {
+  POS: 'Point of Sale',
+  ECOMMERCE: 'E-Commerce',
+  NETBANKING: 'Net Banking',
+  INTERNATIONAL: 'International',
+};
+const channelLabel = (raw) => CHANNEL_LABELS[raw] || raw;
+
 const KpiCard = ({ icon: Icon, label, value, sub, accent }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
     <div className="flex items-center justify-between">
@@ -119,7 +127,7 @@ const CreditCardAnalytics = () => {
   const num = (arr) => (arr || []).map((d) => ({ ...d, value: Number(d.value) }));
   const cardsByCategory = num(data.cards_by_category);
   const cardsByStatus = num(data.cards_by_status);
-  const spendByChannel = num(data.spend_by_channel);
+  const spendByChannel = num(data.spend_by_channel).map((d) => ({ ...d, name: channelLabel(d.name) }));
   const spendByCategory = num(data.spend_by_category);
   const monthly = (data.monthly_spend || []).map((m) => ({
     month: monthLabel(m.month),
