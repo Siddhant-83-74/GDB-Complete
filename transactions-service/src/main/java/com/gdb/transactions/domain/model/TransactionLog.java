@@ -25,6 +25,7 @@ public class TransactionLog {
     private String description;
     private String mode;
     private String status;
+    private Boolean suspicious;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

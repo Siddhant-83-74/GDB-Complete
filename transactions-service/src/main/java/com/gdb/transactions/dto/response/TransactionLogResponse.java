@@ -24,6 +24,7 @@ public class TransactionLogResponse {
     private BigDecimal amount;
     @JsonProperty("transaction_type")
     private TransactionType transactionType;
+    private Boolean suspicious;
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 }

@@ -38,6 +38,21 @@ public interface TransactionLogService {
     List<TransactionLogResponse> getAccountTransactionLogsByDateRange(Long accountNumber, LocalDate startDate, LocalDate endDate, int limit, int offset);
     
     /**
+     * Get transaction logs flagged as suspicious.
+     */
+    List<TransactionLogResponse> getSuspiciousTransactions(int limit, int offset);
+
+    /**
+     * Manually flag or clear the suspicious flag on a transaction.
+     */
+    boolean flagTransaction(Long id, boolean suspicious);
+
+    /**
+     * Get total count of suspicious transaction logs.
+     */
+    Long getSuspiciousCount();
+
+    /**
      * Get total count of all transaction logs.
      */
     Long getTotalCount();

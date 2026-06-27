@@ -15,6 +15,9 @@ public interface CreditCardService {
 
     List<CreditCardResponse> listByUser(Long userId);
 
+    /** Every card across the portfolio (admin command center / card selector). */
+    List<CreditCardResponse> listAll();
+
     CreditCardResponse getById(String id);
 
     /** b.9 enable/disable/block a card. */

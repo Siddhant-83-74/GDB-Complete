@@ -17,7 +17,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        ensureSuspiciousColumn();
         seedTransactionLogs();
+    }
+
+    private void ensureSuspiciousColumn() {
+        // Idempotent schema migration for the transaction suspicion flag feature.
+        jdbcTemplate.execute(
+                "ALTER TABLE transaction_logging ADD COLUMN IF NOT EXISTS suspicious BOOLEAN NOT NULL DEFAULT FALSE");
+        log.info("Ensured 'suspicious' column exists on transaction_logging.");
     }
 
     private void seedTransactionLogs() {

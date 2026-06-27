@@ -172,6 +172,23 @@ export const transactionsService = {
   },
 
   /**
+   * Flag or unflag a transaction as suspicious
+   * @param {string|number} id - Transaction log id
+   * @param {boolean} suspicious - Whether the transaction is suspicious
+   * @returns {Promise<Object>} Updated flag result
+   */
+  flag: async (id, suspicious = true) => {
+    try {
+      const response = await transactionsApi.patch(
+        `/api/v1/transaction-logs/${id}/flag?suspicious=${suspicious}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.detail?.message || error.response?.data?.message || 'Failed to update suspicious flag');
+    }
+  },
+
+  /**
    * Get transfer limit rules for all privilege tiers
    * @returns {Promise<Array>} List of transfer limit rules
    */

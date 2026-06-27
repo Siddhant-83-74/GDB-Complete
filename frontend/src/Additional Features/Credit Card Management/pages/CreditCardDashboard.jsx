@@ -22,13 +22,16 @@ const CreditCardDashboard = () => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const allCards = await creditCardService.getAllCards();
-        setCards(allCards);
-        
-        if (allCards && allCards.length > 0) {
+        // Portfolio-wide listing keeps the selector in sync with Analytics (single source).
+        // Only ACTIVE cards are selectable here — blocked/inactive cards are excluded.
+        const portfolio = await creditCardService.getAllCardsPortfolio();
+        const activeCards = portfolio.filter((c) => c.status === 'Active');
+        setCards(activeCards);
+
+        if (activeCards && activeCards.length > 0) {
           // Restore the previously selected card if it still exists, else default to first.
           const saved = selectedCard.get();
-          const initial = allCards.some((c) => c.id === saved) ? saved : allCards[0].id;
+          const initial = activeCards.some((c) => c.id === saved) ? saved : activeCards[0].id;
           setSelectedCardId(initial);
           selectedCard.set(initial);
         } else {

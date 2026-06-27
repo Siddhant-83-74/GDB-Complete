@@ -43,6 +43,21 @@ public interface TransactionLogRepository {
     List<TransactionLog> findAll(int limit, int offset);
     
     /**
+     * Find transaction logs flagged as suspicious.
+     */
+    List<TransactionLog> findSuspicious(int limit, int offset);
+
+    /**
+     * Update the suspicious flag for a transaction log. Returns rows affected.
+     */
+    int updateSuspiciousFlag(Long id, boolean suspicious);
+
+    /**
+     * Count transaction logs flagged as suspicious.
+     */
+    Long countSuspicious();
+
+    /**
      * Count total transaction logs.
      */
     Long countAll();

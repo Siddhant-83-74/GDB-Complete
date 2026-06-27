@@ -39,8 +39,8 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
 
     private TransactionLog insert(TransactionLog transactionLog) {
         String sql = """
-                INSERT INTO transaction_logging (account_number, amount, transaction_type, reference_id, description, mode, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO transaction_logging (account_number, amount, transaction_type, reference_id, description, mode, status, suspicious)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -54,6 +54,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
             ps.setString(5, transactionLog.getDescription());
             ps.setString(6, transactionLog.getMode());
             ps.setString(7, transactionLog.getStatus() != null ? transactionLog.getStatus() : "SUCCESS");
+            ps.setBoolean(8, Boolean.TRUE.equals(transactionLog.getSuspicious()));
             return ps;
         }, keyHolder);
 
@@ -74,7 +75,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     private TransactionLog update(TransactionLog transactionLog) {
         String sql = """
                 UPDATE transaction_logging
-                SET account_number = ?, amount = ?, transaction_type = ?, reference_id = ?, description = ?, mode = ?, status = ?
+                SET account_number = ?, amount = ?, transaction_type = ?, reference_id = ?, description = ?, mode = ?, status = ?, suspicious = ?
                 WHERE id = ?
                 """;
 
@@ -86,6 +87,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
                 transactionLog.getDescription(),
                 transactionLog.getMode(),
                 transactionLog.getStatus(),
+                Boolean.TRUE.equals(transactionLog.getSuspicious()),
                 transactionLog.getId());
 
         return findById(transactionLog.getId())
@@ -95,7 +97,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     @Override
     public Optional<TransactionLog> findById(Long id) {
         String sql = """
-                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, created_at, updated_at
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
                 FROM transaction_logging
                 WHERE id = ?
                 """;
@@ -107,7 +109,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     @Override
     public List<TransactionLog> findByAccountNumber(Long accountNumber, int limit, int offset) {
         String sql = """
-                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, created_at, updated_at
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
                 FROM transaction_logging
                 WHERE account_number = ?
                 ORDER BY created_at DESC
@@ -121,7 +123,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     public List<TransactionLog> findByAccountNumberAndType(Long accountNumber, TransactionType type, int limit,
             int offset) {
         String sql = """
-                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, created_at, updated_at
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
                 FROM transaction_logging
                 WHERE account_number = ? AND transaction_type = ?
                 ORDER BY created_at DESC
@@ -135,7 +137,7 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     public List<TransactionLog> findByAccountNumberAndDateRange(Long accountNumber, LocalDate startDate,
             LocalDate endDate, int limit, int offset) {
         String sql = """
-                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, created_at, updated_at
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
                 FROM transaction_logging
                 WHERE account_number = ? AND DATE(created_at) BETWEEN ? AND ?
                 ORDER BY created_at DESC
@@ -148,13 +150,38 @@ public class TransactionLogRepositoryImpl implements TransactionLogRepository {
     @Override
     public List<TransactionLog> findAll(int limit, int offset) {
         String sql = """
-                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, created_at, updated_at
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
                 FROM transaction_logging
                 ORDER BY created_at DESC
                 LIMIT ? OFFSET ?
                 """;
 
         return jdbcTemplate.query(sql, rowMapper, limit, offset);
+    }
+
+    @Override
+    public List<TransactionLog> findSuspicious(int limit, int offset) {
+        String sql = """
+                SELECT id, account_number, amount, transaction_type, reference_id, description, mode, status, suspicious, created_at, updated_at
+                FROM transaction_logging
+                WHERE suspicious = TRUE
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                """;
+
+        return jdbcTemplate.query(sql, rowMapper, limit, offset);
+    }
+
+    @Override
+    public int updateSuspiciousFlag(Long id, boolean suspicious) {
+        String sql = "UPDATE transaction_logging SET suspicious = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, suspicious, id);
+    }
+
+    @Override
+    public Long countSuspicious() {
+        String sql = "SELECT COUNT(*) FROM transaction_logging WHERE suspicious = TRUE";
+        return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
     @Override

@@ -50,12 +50,29 @@ public class DataInitializer implements CommandLineRunner {
                 new BigDecimal("300000"), new BigDecimal("120000"), 6);
         seedCard(3L, "System Admin", "9000000000", "VISA", "SILVER",
                 new BigDecimal("100000"), new BigDecimal("9500"), 4);
+        // Additional portfolio cards so the admin selector + analytics show a fuller book.
+        seedCard(2L, "Asha Rao", "9988776655", "VISA", "PLATINUM",
+                new BigDecimal("800000"), new BigDecimal("260000"), 7);
+        seedCard(1L, "John Doe", "9876543210", "RUPAY", "SILVER",
+                new BigDecimal("150000"), new BigDecimal("18000"), 5);
+        seedCard(3L, "System Admin", "9000000000", "MASTERCARD", "PLATINUM",
+                new BigDecimal("1200000"), new BigDecimal("540000"), 9,
+                CreditCardConstants.STATUS_BLOCKED);
+        seedCard(2L, "Asha Rao", "9988776655", "MASTERCARD", "GOLD",
+                new BigDecimal("250000"), new BigDecimal("0"), 3,
+                CreditCardConstants.STATUS_INACTIVE);
 
         log.info("Demo credit cards seeded successfully.");
     }
 
     private void seedCard(Long userId, String name, String mobile, String vendor, String category,
             BigDecimal creditLimit, BigDecimal outstanding, int txnCount) {
+        seedCard(userId, name, mobile, vendor, category, creditLimit, outstanding, txnCount,
+                CreditCardConstants.STATUS_ACTIVE);
+    }
+
+    private void seedCard(Long userId, String name, String mobile, String vendor, String category,
+            BigDecimal creditLimit, BigDecimal outstanding, int txnCount, String status) {
         String id = UUID.randomUUID().toString();
         String pan = CardNumberGenerator.generate(vendor);
         BigDecimal available = creditLimit.subtract(outstanding);
@@ -78,7 +95,7 @@ public class DataInitializer implements CommandLineRunner {
                 cryptoUtil.encrypt(pan), pan.substring(0, 6), pan.substring(pan.length() - 4), vendor, category,
                 BCrypt.hashpw(String.format("%03d", ThreadLocalRandom.current().nextInt(1000)), BCrypt.gensalt()),
                 LocalDate.now().plusYears(4), creditLimit, available, outstanding,
-                false, CreditCardConstants.STATUS_ACTIVE,
+                false, status,
                 "PHYSICAL_FORM,DIGITAL_SIGNATURE", true, leadSource, branchCode,
                 "kyc_" + name.toLowerCase().replace(" ", "_") + ".pdf",
                 "income_" + name.toLowerCase().replace(" ", "_") + ".pdf");

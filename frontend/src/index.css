@@ -178,3 +178,80 @@ body {
     display: none !important;
   }
 }
+
+/* ============================================================
+   Dark theme (toggled via Settings → Appearance)
+   ============================================================ */
+html.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+html.dark .card {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+html.dark .page-title {
+  color: #f1f5f9;
+}
+html.dark .input,
+html.dark .input-field {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+html.dark .label,
+html.dark .input-label {
+  color: #cbd5e1;
+}
+html.dark .btn-secondary {
+  background-color: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+/* Common utility surfaces used across pages/layout */
+html.dark .bg-white {
+  background-color: #1e293b !important;
+}
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #0f172a !important;
+}
+html.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #cbd5e1 !important;
+}
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important;
+}
+html.dark .border-gray-100,
+html.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* ============================================================
+   Compact mode (toggled via Settings → Appearance)
+   ============================================================ */
+html.compact .card {
+  padding: 0.75rem !important;
+}
+html.compact .p-6 {
+  padding: 1rem !important;
+}
+html.compact .p-4 {
+  padding: 0.625rem !important;
+}
+html.compact .mb-6 {
+  margin-bottom: 1rem !important;
+}
+html.compact .gap-6 {
+  gap: 1rem !important;
+}

@@ -24,6 +24,10 @@ SELECT *
 FROM credit_cards
 WHERE user_id = :userId
 ORDER BY created_at DESC;
+-- FIND_ALL_CARDS
+SELECT *
+FROM credit_cards
+ORDER BY created_at DESC;
 -- UPDATE_CARD_BALANCES
 UPDATE credit_cards
 SET available_credit = :availableCredit,

@@ -19,39 +19,27 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { loadSettings, saveSettings, applySettings } from '../../utils/appSettings';
 
 const SettingsPage = () => {
   const { user } = useAuthStore();
-  
+
+  // Hydrate from persisted settings (localStorage) so values survive reloads
+  const stored = loadSettings();
+
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   // General Settings
-  const [generalSettings, setGeneralSettings] = useState({
-    language: 'en',
-    timezone: 'Asia/Kolkata',
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'INR',
-  });
+  const [generalSettings, setGeneralSettings] = useState(stored.general);
 
   // Notification Settings
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    transactionAlerts: true,
-    loginAlerts: true,
-    marketingEmails: false,
-    weeklyReports: true,
-    smsAlerts: false,
-  });
+  const [notificationSettings, setNotificationSettings] = useState(stored.notifications);
 
   // Security Settings
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorEnabled: false,
-    sessionTimeout: '30',
-    ipRestriction: false,
-  });
+  const [securitySettings, setSecuritySettings] = useState(stored.security);
 
   // Password Change
   const [passwordData, setPasswordData] = useState({
@@ -62,16 +50,24 @@ const SettingsPage = () => {
   const [passwordErrors, setPasswordErrors] = useState({});
 
   // Appearance Settings
-  const [appearance, setAppearance] = useState({
-    theme: 'light',
-    sidebarCollapsed: false,
-    compactMode: false,
-  });
+  const [appearance, setAppearance] = useState(stored.appearance);
+
+  // Live-apply appearance (theme / compact mode) and language as the user changes them
+  useEffect(() => {
+    applySettings({ general: generalSettings, appearance });
+  }, [appearance, generalSettings.language]);
 
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const allSettings = {
+        general: generalSettings,
+        notifications: notificationSettings,
+        security: securitySettings,
+        appearance,
+      };
+      saveSettings(allSettings);
+      applySettings(allSettings);
       toast.success('Settings saved successfully!');
     } catch (error) {
       toast.error('Failed to save settings');
