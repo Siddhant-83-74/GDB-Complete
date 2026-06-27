@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { creditCardService, selectedCard } from '../services/creditCardsService';
 import CreditCardWidget from '../components/CreditCardWidget';
 import UtilizationBar from '../components/UtilizationBar';
-import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText, BarChart3 } from 'lucide-react';
+import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText, BarChart3, Search, X, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CreditCardDashboard = () => {
@@ -14,7 +14,13 @@ const CreditCardDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('All');
-  
+
+  // Card search & filters (replaces the old selector dropdown)
+  const [cardSearch, setCardSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('All');
+  const [vendorFilter, setVendorFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+
   const navigate = useNavigate();
 
   // Load all cards initially
@@ -23,15 +29,14 @@ const CreditCardDashboard = () => {
       try {
         setLoading(true);
         // Portfolio-wide listing keeps the selector in sync with Analytics (single source).
-        // Only ACTIVE cards are selectable here — blocked/inactive cards are excluded.
+        // The whole book is searchable here; the search panel filters by parameters.
         const portfolio = await creditCardService.getAllCardsPortfolio();
-        const activeCards = portfolio.filter((c) => c.status === 'Active');
-        setCards(activeCards);
+        setCards(portfolio);
 
-        if (activeCards && activeCards.length > 0) {
+        if (portfolio && portfolio.length > 0) {
           // Restore the previously selected card if it still exists, else default to first.
           const saved = selectedCard.get();
-          const initial = activeCards.some((c) => c.id === saved) ? saved : activeCards[0].id;
+          const initial = portfolio.some((c) => c.id === saved) ? saved : portfolio[0].id;
           setSelectedCardId(initial);
           selectedCard.set(initial);
         } else {
@@ -85,6 +90,46 @@ const CreditCardDashboard = () => {
     tx => filterType === 'All' ? true : tx.type === filterType
   );
 
+  // Apply search + filters to the card portfolio
+  const matchedCards = cards.filter((c) => {
+    const q = cardSearch.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      (c.cardHolderName || '').toLowerCase().includes(q) ||
+      (c.cardNumber || '').toLowerCase().includes(q) ||
+      (c.cardNumber || '').slice(-4).includes(q) ||
+      String(c.mobileNumber || '').includes(q) ||
+      String(c.linkedAccountNumber || '').includes(q);
+    const matchesCat = catFilter === 'All' || c.cardType === catFilter;
+    const matchesVendor = vendorFilter === 'All' || c.vendor === vendorFilter;
+    const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+    return matchesSearch && matchesCat && matchesVendor && matchesStatus;
+  });
+
+  const hasActiveFilters =
+    cardSearch || catFilter !== 'All' || vendorFilter !== 'All' || statusFilter !== 'All';
+
+  const resetCardFilters = () => {
+    setCardSearch('');
+    setCatFilter('All');
+    setVendorFilter('All');
+    setStatusFilter('All');
+  };
+
+  const selectCard = (id) => {
+    setSelectedCardId(id);
+    selectedCard.set(id);
+  };
+
+  const statusPill = (status) => {
+    const map = {
+      Active: 'bg-green-100 text-green-700',
+      Blocked: 'bg-red-100 text-red-700',
+      Inactive: 'bg-gray-100 text-gray-600',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
+  };
+
   if (loading && cards.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -98,34 +143,10 @@ const CreditCardDashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Credit Card Administration</h1>
-          <p className="text-gray-500">Select an active card to review its details, statements and transactions</p>
+          <p className="text-gray-500">Search the card portfolio and review details, statements and transactions</p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
-          {/* Card Selector Dropdown */}
-          {cards.length > 0 && (
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CreditCard className="h-4 w-4 text-gray-400" />
-              </div>
-              <select 
-                value={selectedCardId}
-                onChange={(e) => { setSelectedCardId(e.target.value); selectedCard.set(e.target.value); }}
-                className="appearance-none bg-white border border-gray-300 text-gray-700 py-2.5 pl-10 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-medium cursor-pointer"
-              >
-                {cards.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.cardHolderName ? `${c.cardHolderName} — ` : ''}{c.cardType} (••{c.cardNumber.slice(-4)})
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                <ChevronDown className="w-4 h-4" />
-              </div>
-            </div>
-          )}
-
-
           <button
             onClick={() => navigate('/credit-cards/analytics')}
             className="btn-outline flex items-center gap-2 shadow-sm"
@@ -139,10 +160,109 @@ const CreditCardDashboard = () => {
             className="btn-primary flex items-center gap-2 shadow-sm"
           >
             <CreditCard className="w-4 h-4" />
-            Apply New Card
+            Issue New Card
           </button>
         </div>
       </div>
+
+      {/* Card search & filters */}
+      {cards.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={cardSearch}
+                onChange={(e) => setCardSearch(e.target.value)}
+                placeholder="Search by holder name, card number, mobile or linked account…"
+                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+              {cardSearch && (
+                <button
+                  onClick={() => setCardSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-gray-400 hidden sm:block" />
+              <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}
+                className="py-2.5 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+                <option value="All">All Categories</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Platinum">Platinum</option>
+              </select>
+              <select value={vendorFilter} onChange={(e) => setVendorFilter(e.target.value)}
+                className="py-2.5 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+                <option value="All">All Vendors</option>
+                <option value="VISA">VISA</option>
+                <option value="MASTERCARD">Mastercard</option>
+                <option value="RUPAY">RuPay</option>
+              </select>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+                className="py-2.5 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+              {hasActiveFilters && (
+                <button onClick={resetCardFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline px-1">
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="text-xs text-gray-500">
+            {matchedCards.length} of {cards.length} cards
+          </div>
+          <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 border border-gray-100 rounded-lg">
+            {matchedCards.length === 0 ? (
+              <div className="p-6 text-center text-sm text-gray-500">
+                No cards match your search.
+              </div>
+            ) : (
+              matchedCards.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => selectCard(c.id)}
+                  className={`w-full text-left px-4 py-3 flex items-center justify-between gap-3 transition-colors ${
+                    c.id === selectedCardId ? 'bg-primary-50' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {c.cardHolderName || 'Unknown holder'}
+                        <span className="text-gray-400 font-normal"> · ••{c.cardNumber.slice(-4)}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {c.cardType} · {c.vendor} · ₹{Number(c.outstandingAmount).toLocaleString('en-IN')} outstanding
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${statusPill(c.status)}`}>
+                    {c.status}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {loading && cards.length > 0 && (
         <div className="flex justify-center py-12">
@@ -154,9 +274,9 @@ const CreditCardDashboard = () => {
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md shadow-sm flex items-start">
           <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">Payment Due Soon</h3>
+            <h3 className="text-sm font-medium text-yellow-800">Payment Due Alert</h3>
             <p className="text-sm text-yellow-700 mt-1">
-              Your minimum payment of ₹{data.minimumDue.toLocaleString('en-IN')} is due on {new Date(data.nextDueDate).toLocaleDateString()}. Please pay on time to avoid late fees.
+              Minimum due of ₹{data.minimumDue.toLocaleString('en-IN')} is approaching on {new Date(data.nextDueDate).toLocaleDateString()}. Consider flagging the account or generating a payment reminder.
             </p>
           </div>
         </div>
@@ -166,9 +286,9 @@ const CreditCardDashboard = () => {
         <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-md shadow-sm flex items-start mb-4">
           <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <h3 className="text-sm font-medium text-green-800">Outstanding Bill: ₹0</h3>
+            <h3 className="text-sm font-medium text-green-800">No Outstanding Balance</h3>
             <p className="text-sm text-green-700 mt-1">
-              You have no pending dues. Please add more money or spend more!
+              This card has zero outstanding amount. No collections action required at this time.
             </p>
           </div>
         </div>
@@ -205,11 +325,11 @@ const CreditCardDashboard = () => {
                   <p className="text-2xl font-bold text-primary-600">₹{data.availableCredit.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Minimum Due</p>
+                  <p className="text-sm text-gray-500">Min. Due (5%)</p>
                   <p className="text-lg font-semibold text-gray-800">₹{data.minimumDue.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Next Due Date</p>
+                  <p className="text-sm text-gray-500">Payment Due By</p>
                   <p className="text-lg font-semibold text-gray-800">{new Date(data.nextDueDate).toLocaleDateString()}</p>
                 </div>
               </div>
@@ -280,13 +400,13 @@ const CreditCardDashboard = () => {
       ) : !loading && cards.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
           <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No active credit card</h3>
-          <p className="text-gray-500 mt-2 mb-6">Apply for a new credit card to get started.</p>
+          <h3 className="text-lg font-medium text-gray-900">No Cards in Portfolio</h3>
+          <p className="text-gray-500 mt-2 mb-6">No credit cards have been issued yet. Issue a new card to begin managing the portfolio.</p>
           <button
             onClick={() => navigate('/credit-cards/apply')}
             className="btn-primary"
           >
-            Apply Now
+            Issue New Card
           </button>
         </div>
       ) : null}

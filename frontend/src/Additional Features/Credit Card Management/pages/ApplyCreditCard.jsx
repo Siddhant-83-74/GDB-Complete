@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { creditCardService } from '../services/creditCardsService';
 import {
   User, Phone, CreditCard, CheckCircle, ArrowLeft, ShieldCheck,
-  FileSignature, KeyRound, Building2, Upload, FileText,
+  FileSignature, KeyRound, Building2, Upload, FileText, ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -193,12 +193,13 @@ const ApplyCreditCard = () => {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Card Network</label>
                   <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select className={inputClass('vendor')} value={form.vendor} onChange={(e) => set('vendor', e.target.value)}>
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+                    <select className={`${inputClass('vendor')} appearance-none pr-10`} value={form.vendor} onChange={(e) => set('vendor', e.target.value)}>
                       <option value="VISA">VISA</option>
                       <option value="MASTERCARD">MASTERCARD</option>
                       <option value="RUPAY">RUPAY</option>
                     </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -290,11 +291,12 @@ const ApplyCreditCard = () => {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Lead Source / Channel *</label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select className={inputClass('leadSource')} value={form.leadSource} onChange={(e) => set('leadSource', e.target.value)}>
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+                    <select className={`${inputClass('leadSource')} appearance-none pr-10`} value={form.leadSource} onChange={(e) => set('leadSource', e.target.value)}>
                       <option value="">Select channel</option>
                       {LEAD_SOURCES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
                     </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                   </div>
                   {errors.leadSource && <p className="mt-1.5 text-sm text-red-500">{errors.leadSource}</p>}
                 </div>

@@ -139,7 +139,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 FROM credit_cards
                 WHERE credit_limit > 0
                 ORDER BY (outstanding_amount / NULLIF(credit_limit, 0)) DESC
-                LIMIT 5
+                LIMIT 100
                 """, rs -> {
             Map<String, Object> m = new LinkedHashMap<>();
             BigDecimal limit = rs.getBigDecimal("credit_limit");

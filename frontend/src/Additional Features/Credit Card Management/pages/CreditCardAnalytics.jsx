@@ -6,7 +6,7 @@ import {
   CartesianGrid, Tooltip, Legend, AreaChart, Area,
 } from 'recharts';
 import {
-  ArrowLeft, CreditCard, TrendingUp, Wallet, AlertTriangle, IndianRupee, RefreshCw,
+  ArrowLeft, CreditCard, TrendingUp, Wallet, AlertTriangle, IndianRupee, RefreshCw, Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,6 +26,14 @@ const monthLabel = (ym) => {
   const d = new Date(Number(y), Number(m) - 1, 1);
   return d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
 };
+
+const CHANNEL_LABELS = {
+  POS: 'Point of Sale',
+  ECOMMERCE: 'E-Commerce',
+  NETBANKING: 'Net Banking',
+  INTERNATIONAL: 'International',
+};
+const channelLabel = (raw) => CHANNEL_LABELS[raw] || raw;
 
 const KpiCard = ({ icon: Icon, label, value, sub, accent }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -47,16 +55,56 @@ const ChartCard = ({ title, children, className = '' }) => (
   </div>
 );
 
+// Reusable table pager (windowed numbered buttons + prev/next)
+const Pager = ({ page, totalPages, onChange, label }) => {
+  if (totalPages <= 1) return null;
+  const windowSize = Math.min(5, totalPages);
+  let start;
+  if (totalPages <= 5) start = 1;
+  else if (page <= 3) start = 1;
+  else if (page >= totalPages - 2) start = totalPages - 4;
+  else start = page - 2;
+  const pages = Array.from({ length: windowSize }, (_, i) => start + i);
+  return (
+    <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span className="text-xs text-gray-500">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => onChange(page - 1)} disabled={page === 1}
+          className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+        {pages.map((p) => (
+          <button key={p} onClick={() => onChange(p)}
+            className={`px-3 py-1 rounded-md text-sm border ${p === page ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>{p}</button>
+        ))}
+        <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          className="px-2.5 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+      </div>
+    </div>
+  );
+};
+
 const CreditCardAnalytics = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [allCards, setAllCards] = useState([]);
+  const [cardQuery, setCardQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [topPage, setTopPage] = useState(1);
+  const [allPage, setAllPage] = useState(1);
+  const TOP_PAGE_SIZE = 6;
+  const ALL_PAGE_SIZE = 8;
+
+  // Reset the All Cards table to page 1 whenever the search changes
+  useEffect(() => { setAllPage(1); }, [cardQuery]);
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await creditCardService.getPortfolioAnalytics();
+      const [res, cards] = await Promise.all([
+        creditCardService.getPortfolioAnalytics(),
+        creditCardService.getAllCardsPortfolio(),
+      ]);
       setData(res);
+      setAllCards(cards);
     } catch (e) {
       toast.error(e.message || 'Unable to load analytics');
     } finally {
@@ -79,7 +127,7 @@ const CreditCardAnalytics = () => {
   const num = (arr) => (arr || []).map((d) => ({ ...d, value: Number(d.value) }));
   const cardsByCategory = num(data.cards_by_category);
   const cardsByStatus = num(data.cards_by_status);
-  const spendByChannel = num(data.spend_by_channel);
+  const spendByChannel = num(data.spend_by_channel).map((d) => ({ ...d, name: channelLabel(d.name) }));
   const spendByCategory = num(data.spend_by_category);
   const monthly = (data.monthly_spend || []).map((m) => ({
     month: monthLabel(m.month),
@@ -88,6 +136,27 @@ const CreditCardAnalytics = () => {
   }));
   const topCards = data.top_cards_by_utilization || [];
   const utilization = Number(s.overall_utilization || 0);
+
+  // Filter (All Cards search) + paginate both report tables
+  const filteredCards = allCards.filter((c) => {
+    const q = cardQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (c.cardHolderName || '').toLowerCase().includes(q) ||
+      (c.cardNumber || '').toLowerCase().includes(q) ||
+      (c.vendor || '').toLowerCase().includes(q) ||
+      (c.cardType || '').toLowerCase().includes(q) ||
+      (c.status || '').toLowerCase().includes(q)
+    );
+  });
+
+  const topTotalPages = Math.max(1, Math.ceil(topCards.length / TOP_PAGE_SIZE));
+  const topPageSafe = Math.min(topPage, topTotalPages);
+  const pagedTopCards = topCards.slice((topPageSafe - 1) * TOP_PAGE_SIZE, topPageSafe * TOP_PAGE_SIZE);
+
+  const allTotalPages = Math.max(1, Math.ceil(filteredCards.length / ALL_PAGE_SIZE));
+  const allPageSafe = Math.min(allPage, allTotalPages);
+  const pagedAllCards = filteredCards.slice((allPageSafe - 1) * ALL_PAGE_SIZE, allPageSafe * ALL_PAGE_SIZE);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
@@ -239,7 +308,7 @@ const CreditCardAnalytics = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {topCards.map((c) => {
+              {pagedTopCards.map((c) => {
                 const u = Number(c.utilization);
                 return (
                   <tr key={c.id} className="hover:bg-gray-50">
@@ -271,6 +340,91 @@ const CreditCardAnalytics = () => {
             </tbody>
           </table>
         </div>
+        <Pager
+          page={topPageSafe}
+          totalPages={topTotalPages}
+          onChange={setTopPage}
+          label={`Showing ${(topPageSafe - 1) * TOP_PAGE_SIZE + 1}-${Math.min(topPageSafe * TOP_PAGE_SIZE, topCards.length)} of ${topCards.length}`}
+        />
+      </div>
+
+      {/* Full portfolio — every card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-indigo-500" />
+            <h3 className="font-semibold text-gray-800">All Cards</h3>
+            <span className="text-xs text-gray-400">— complete portfolio ({allCards.length})</span>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={cardQuery}
+              onChange={(e) => setCardQuery(e.target.value)}
+              placeholder="Search holder, card, vendor…"
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-full sm:w-64"
+            />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Card Holder', 'Card', 'Category', 'Vendor', 'Status', 'Limit', 'Available', 'Outstanding', 'Utilization', 'Mobile'].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {pagedAllCards.map((c) => {
+                  const u = c.creditLimit > 0 ? Math.round((c.outstandingAmount / c.creditLimit) * 100) : 0;
+                  const statusColor = c.status === 'Active' ? 'bg-green-100 text-green-700'
+                    : c.status === 'Blocked' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600';
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">{c.cardHolderName || '—'}</td>
+                      <td className="px-4 py-3 text-sm font-mono text-gray-600 whitespace-nowrap">••{c.cardNumber.slice(-4)}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: `${CATEGORY_COLORS[c.cardType?.toUpperCase()] || '#94a3b8'}22`, color: CATEGORY_COLORS[c.cardType?.toUpperCase()] || '#475569' }}>
+                          {c.cardType}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{c.vendor}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>{c.status}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{inr(c.creditLimit)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{inr(c.availableCredit)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{inr(c.outstandingAmount)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 min-w-[120px]">
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${u > 70 ? 'bg-red-500' : u > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                              style={{ width: `${Math.min(u, 100)}%` }} />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 w-9 text-right">{u}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{c.mobileNumber || '—'}</td>
+                    </tr>
+                  );
+                })}
+              {filteredCards.length === 0 && (
+                <tr><td colSpan="10" className="px-6 py-10 text-center text-gray-500 text-sm">
+                  {cardQuery ? 'No cards match your search' : 'No cards in portfolio'}
+                </td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <Pager
+          page={allPageSafe}
+          totalPages={allTotalPages}
+          onChange={setAllPage}
+          label={`Showing ${filteredCards.length === 0 ? 0 : (allPageSafe - 1) * ALL_PAGE_SIZE + 1}-${Math.min(allPageSafe * ALL_PAGE_SIZE, filteredCards.length)} of ${filteredCards.length}`}
+        />
       </div>
     </div>
   );

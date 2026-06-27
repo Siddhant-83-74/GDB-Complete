@@ -72,6 +72,8 @@ const adaptCard = (c) => {
     nextDueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
     status: titleCase(c.status), // ACTIVE -> Active
     vendor: c.vendor,
+    category: titleCase(c.category),
+    expiryDate: c.expiry_date, // YYYY-MM-DD
     cardHolderName: c.card_holder_name,
     mobileNumber: c.mobile_number,
     internationalEnabled: c.international_enabled,
