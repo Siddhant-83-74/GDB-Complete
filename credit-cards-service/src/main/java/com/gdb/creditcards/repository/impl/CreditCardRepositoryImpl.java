@@ -42,7 +42,15 @@ public class CreditCardRepositoryImpl implements CreditCardRepository {
                 .addValue("outstandingAmount", card.getOutstandingAmount())
                 .addValue("linkedAccountNumber", card.getLinkedAccountNumber())
                 .addValue("internationalEnabled", card.getInternationalEnabled())
-                .addValue("status", card.getStatus());
+                .addValue("status", card.getStatus())
+                .addValue("consentSource", card.getConsentSource())
+                .addValue("otpVerified", card.getOtpVerified() != null && card.getOtpVerified())
+                .addValue("leadSource", card.getLeadSource())
+                .addValue("sourcingBranchCode", card.getSourcingBranchCode())
+                .addValue("kycDocumentName", card.getKycDocumentName())
+                .addValue("incomeDocumentName", card.getIncomeDocumentName())
+                .addValue("applicantPhotoCaptured",
+                        card.getApplicantPhotoCaptured() != null && card.getApplicantPhotoCaptured());
         jdbcTemplate.update(SqlLoader.get("SAVE_CARD"), params);
         return card;
     }

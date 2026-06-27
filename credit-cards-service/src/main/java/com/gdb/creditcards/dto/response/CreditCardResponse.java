@@ -53,6 +53,28 @@ public class CreditCardResponse {
 
     private String status;
 
+    // Admin application metadata (sourcing / consent / KYC trail)
+    @JsonProperty("consent_source")
+    private String consentSource;
+
+    @JsonProperty("otp_verified")
+    private Boolean otpVerified;
+
+    @JsonProperty("lead_source")
+    private String leadSource;
+
+    @JsonProperty("sourcing_branch_code")
+    private String sourcingBranchCode;
+
+    @JsonProperty("kyc_document_name")
+    private String kycDocumentName;
+
+    @JsonProperty("income_document_name")
+    private String incomeDocumentName;
+
+    @JsonProperty("applicant_photo_captured")
+    private Boolean applicantPhotoCaptured;
+
     @JsonProperty("service_limits")
     private List<ServiceLimitView> serviceLimits;
 

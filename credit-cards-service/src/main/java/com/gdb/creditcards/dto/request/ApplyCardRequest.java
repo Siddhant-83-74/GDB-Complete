@@ -54,4 +54,42 @@ public class ApplyCardRequest {
     // b.14 Optional account to map the card to at creation time
     @JsonProperty("linked_account_number")
     private Long linkedAccountNumber;
+
+    // ----- Admin application: Consent & Verification -----------------------
+    // At least one consent source must be recorded (PHYSICAL_FORM, DIGITAL_SIGNATURE, VERBAL_OTP)
+    @NotEmpty(message = "At least one consent source is required")
+    @JsonProperty("consent_sources")
+    private java.util.List<String> consentSources;
+
+    // OTP sent to the applicant's phone must be verified before the officer can proceed
+    @NotNull(message = "OTP verification status is required")
+    @AssertTrue(message = "Applicant OTP must be verified before submitting the application")
+    @JsonProperty("otp_verified")
+    private Boolean otpVerified;
+
+    // ----- Admin application: Application Metadata -------------------------
+    @NotBlank(message = "Lead source / channel is required")
+    @Pattern(regexp = "BRANCH|COLD_CALL|DIGITAL_CAMPAIGN",
+            message = "Lead source must be BRANCH, COLD_CALL or DIGITAL_CAMPAIGN")
+    @JsonProperty("lead_source")
+    private String leadSource;
+
+    @NotBlank(message = "Sourcing branch code is required")
+    @Size(max = 20)
+    @JsonProperty("sourcing_branch_code")
+    private String sourcingBranchCode;
+
+    // ----- Admin application: Document Uploads ----------------------------
+    @NotBlank(message = "KYC document scan is required")
+    @JsonProperty("kyc_document_name")
+    private String kycDocumentName;
+
+    @NotBlank(message = "Income document scan is required")
+    @JsonProperty("income_document_name")
+    private String incomeDocumentName;
+
+    @NotNull(message = "Live photograph capture status is required")
+    @AssertTrue(message = "A live photograph / video-KYC of the applicant is required")
+    @JsonProperty("applicant_photo_captured")
+    private Boolean applicantPhotoCaptured;
 }

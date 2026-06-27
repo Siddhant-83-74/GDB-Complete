@@ -60,19 +60,28 @@ public class DataInitializer implements CommandLineRunner {
         String pan = CardNumberGenerator.generate(vendor);
         BigDecimal available = creditLimit.subtract(outstanding);
 
+        String[] leadSources = {"BRANCH", "COLD_CALL", "DIGITAL_CAMPAIGN"};
+        String leadSource = leadSources[ThreadLocalRandom.current().nextInt(leadSources.length)];
+        String branchCode = String.format("BR-DEL-%03d", ThreadLocalRandom.current().nextInt(1, 100));
+
         jdbcTemplate.update("""
                 INSERT INTO credit_cards (
                     id, user_id, card_holder_name, mobile_number,
                     card_number_encrypted, card_bin, card_last4, vendor, category,
                     cvv_hash, expiry_date, credit_limit, available_credit, outstanding_amount,
-                    international_enabled, status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    international_enabled, status,
+                    consent_source, otp_verified, lead_source, sourcing_branch_code,
+                    kyc_document_name, income_document_name, applicant_photo_captured)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 id, userId, name, mobile,
                 cryptoUtil.encrypt(pan), pan.substring(0, 6), pan.substring(pan.length() - 4), vendor, category,
                 BCrypt.hashpw(String.format("%03d", ThreadLocalRandom.current().nextInt(1000)), BCrypt.gensalt()),
                 LocalDate.now().plusYears(4), creditLimit, available, outstanding,
-                false, CreditCardConstants.STATUS_ACTIVE);
+                false, CreditCardConstants.STATUS_ACTIVE,
+                "PHYSICAL_FORM,DIGITAL_SIGNATURE", true, leadSource, branchCode,
+                "kyc_" + name.toLowerCase().replace(" ", "_") + ".pdf",
+                "income_" + name.toLowerCase().replace(" ", "_") + ".pdf", true);
 
         seedTransactions(id, outstanding, txnCount);
     }

@@ -109,6 +109,18 @@ const CreditCardDetails = () => {
             </div>
 
             <div className="col-span-1 md:col-span-2 border-t border-gray-100 pt-8">
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">Application &amp; Sourcing</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200 mb-8">
+                <MetaItem label="Card Holder" value={data.cardHolderName} />
+                <MetaItem label="Registered Mobile" value={data.mobileNumber} />
+                <MetaItem label="Lead Source" value={formatEnum(data.leadSource)} />
+                <MetaItem label="Sourcing Branch" value={data.sourcingBranchCode} />
+                <MetaItem label="Consent Source" value={data.consentSource ? data.consentSource.split(',').map(formatEnum).join(', ') : null} />
+                <MetaItem label="OTP Verified" value={data.otpVerified ? 'Yes' : 'No'} badge={data.otpVerified ? 'green' : 'red'} />
+                <MetaItem label="KYC Document" value={data.kycDocumentName} />
+                <MetaItem label="Income Document" value={data.incomeDocumentName} />
+                <MetaItem label="Live Photograph" value={data.applicantPhotoCaptured ? 'Captured' : 'Not captured'} badge={data.applicantPhotoCaptured ? 'green' : 'red'} />
+              </div>
               <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6">Payment Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
                 <div className="flex items-start gap-4">
@@ -138,6 +150,24 @@ const CreditCardDetails = () => {
     </div>
   );
 };
+
+const formatEnum = (v) =>
+  typeof v === 'string' && v
+    ? v.split('_').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')
+    : v;
+
+const MetaItem = ({ label, value, badge }) => (
+  <div>
+    <p className="text-sm text-gray-500 mb-1">{label}</p>
+    {badge ? (
+      <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
+        badge === 'green' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+      }`}>{value}</span>
+    ) : (
+      <p className="text-base font-semibold text-gray-900 break-words">{value || '—'}</p>
+    )}
+  </div>
+);
 
 // Lucide icon helper
 const IndianRupee = ({ className }) => (

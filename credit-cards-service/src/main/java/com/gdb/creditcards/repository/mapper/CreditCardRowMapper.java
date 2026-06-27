@@ -30,6 +30,13 @@ public class CreditCardRowMapper implements RowMapper<CreditCard> {
                         : null)
                 .internationalEnabled(rs.getBoolean("international_enabled"))
                 .status(rs.getString("status"))
+                .consentSource(rs.getString("consent_source"))
+                .otpVerified(rs.getBoolean("otp_verified"))
+                .leadSource(rs.getString("lead_source"))
+                .sourcingBranchCode(rs.getString("sourcing_branch_code"))
+                .kycDocumentName(rs.getString("kyc_document_name"))
+                .incomeDocumentName(rs.getString("income_document_name"))
+                .applicantPhotoCaptured(rs.getBoolean("applicant_photo_captured"))
                 .createdAt(rs.getTimestamp("created_at") != null
                         ? rs.getTimestamp("created_at").toLocalDateTime()
                         : null)

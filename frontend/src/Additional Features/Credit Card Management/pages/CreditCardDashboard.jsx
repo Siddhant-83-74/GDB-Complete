@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { creditCardService } from '../services/creditCardsService';
+import { creditCardService, selectedCard } from '../services/creditCardsService';
 import CreditCardWidget from '../components/CreditCardWidget';
 import UtilizationBar from '../components/UtilizationBar';
 import { AlertCircle, CreditCard, ArrowRight, CheckCircle, ChevronDown, Receipt, FileText } from 'lucide-react';
@@ -26,7 +26,11 @@ const CreditCardDashboard = () => {
         setCards(allCards);
         
         if (allCards && allCards.length > 0) {
-          setSelectedCardId(allCards[0].id);
+          // Restore the previously selected card if it still exists, else default to first.
+          const saved = selectedCard.get();
+          const initial = allCards.some((c) => c.id === saved) ? saved : allCards[0].id;
+          setSelectedCardId(initial);
+          selectedCard.set(initial);
         } else {
           setLoading(false); // No cards, stop loading
         }
@@ -90,8 +94,8 @@ const CreditCardDashboard = () => {
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Credit Card Dashboard</h1>
-          <p className="text-gray-500">Manage your credit card and view statements</p>
+          <h1 className="text-2xl font-bold text-gray-900">Credit Card Administration</h1>
+          <p className="text-gray-500">Select an active card to review its details, statements and transactions</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -103,12 +107,12 @@ const CreditCardDashboard = () => {
               </div>
               <select 
                 value={selectedCardId}
-                onChange={(e) => setSelectedCardId(e.target.value)}
+                onChange={(e) => { setSelectedCardId(e.target.value); selectedCard.set(e.target.value); }}
                 className="appearance-none bg-white border border-gray-300 text-gray-700 py-2.5 pl-10 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-medium cursor-pointer"
               >
                 {cards.map(c => (
                   <option key={c.id} value={c.id}>
-                    {c.cardType} ({c.cardNumber.slice(-4)})
+                    {c.cardHolderName ? `${c.cardHolderName} — ` : ''}{c.cardType} (••{c.cardNumber.slice(-4)})
                   </option>
                 ))}
               </select>

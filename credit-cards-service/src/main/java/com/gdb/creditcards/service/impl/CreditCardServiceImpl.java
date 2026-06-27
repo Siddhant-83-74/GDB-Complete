@@ -72,6 +72,15 @@ public class CreditCardServiceImpl implements CreditCardService {
                 .outstandingAmount(java.math.BigDecimal.ZERO)
                 .internationalEnabled(false) // b.16 off by default
                 .status(CreditCardConstants.STATUS_ACTIVE)
+                // Admin application metadata
+                .consentSource(request.getConsentSources() == null ? null
+                        : String.join(",", request.getConsentSources()))
+                .otpVerified(Boolean.TRUE.equals(request.getOtpVerified()))
+                .leadSource(request.getLeadSource())
+                .sourcingBranchCode(request.getSourcingBranchCode())
+                .kycDocumentName(request.getKycDocumentName())
+                .incomeDocumentName(request.getIncomeDocumentName())
+                .applicantPhotoCaptured(Boolean.TRUE.equals(request.getApplicantPhotoCaptured()))
                 .build();
 
         // b.14: optional account mapping at creation, verified via Account Service

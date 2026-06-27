@@ -72,10 +72,30 @@ const adaptCard = (c) => {
     nextDueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
     status: titleCase(c.status), // ACTIVE -> Active
     vendor: c.vendor,
+    cardHolderName: c.card_holder_name,
     mobileNumber: c.mobile_number,
     internationalEnabled: c.international_enabled,
     linkedAccountNumber: c.linked_account_number,
+    // Admin application metadata
+    consentSource: c.consent_source,
+    otpVerified: c.otp_verified,
+    leadSource: c.lead_source,
+    sourcingBranchCode: c.sourcing_branch_code,
+    kycDocumentName: c.kyc_document_name,
+    incomeDocumentName: c.income_document_name,
+    applicantPhotoCaptured: c.applicant_photo_captured,
   };
+};
+
+// --- shared "selected card" so every admin section works on the same card ---
+const SELECTED_CARD_KEY = 'gdb-selected-credit-card';
+export const selectedCard = {
+  get: () => {
+    try { return localStorage.getItem(SELECTED_CARD_KEY) || null; } catch { return null; }
+  },
+  set: (cardId) => {
+    try { cardId ? localStorage.setItem(SELECTED_CARD_KEY, cardId) : localStorage.removeItem(SELECTED_CARD_KEY); } catch { /* ignore */ }
+  },
 };
 
 const adaptTxn = (t) => ({
@@ -107,8 +127,9 @@ export const creditCardService = {
 
   getDashboardData: async (cardId = null) => {
     try {
-      if (cardId) {
-        const { data } = await creditCardsApi.get(`${BASE}/${cardId}`);
+      const targetCardId = cardId || selectedCard.get();
+      if (targetCardId) {
+        const { data } = await creditCardsApi.get(`${BASE}/${targetCardId}`);
         return adaptCard(data);
       }
       const cards = await creditCardService.getAllCards();
@@ -120,7 +141,7 @@ export const creditCardService = {
 
   getTransactions: async (filters, cardId = null) => {
     try {
-      const targetCardId = cardId || (await creditCardService.getAllCards())[0]?.id;
+      const targetCardId = cardId || selectedCard.get() || (await creditCardService.getAllCards())[0]?.id;
       if (!targetCardId) return [];
       const { data } = await creditCardsApi.get(`${BASE}/${targetCardId}/transactions`);
       let txns = (data || []).map(adaptTxn);
@@ -145,32 +166,32 @@ export const creditCardService = {
   },
 
   applyForCard: async (applicationData) => {
-    if (!applicationData.employmentType || !applicationData.salary || !applicationData.cardType) {
+    if (!applicationData.cardType) {
       throw new Error('Missing required fields');
-    }
-    // Map the lightweight UI form onto the backend application contract.
-    // Fields the form doesn't collect are defaulted sensibly.
-    const userId = getCurrentUserId();
-    let holderName = 'Card Holder';
-    let mobile = '9999999999';
-    try {
-      const parsed = JSON.parse(localStorage.getItem('gdb-auth-storage'));
-      holderName = parsed?.state?.user?.full_name || parsed?.state?.user?.username || holderName;
-    } catch (e) {
-      /* use default */
     }
 
     const expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 4);
 
     const payload = {
-      card_holder_name: holderName,
-      user_id: userId,
-      mobile_number: mobile,
-      vendor: 'VISA',
+      // Applicant identity (officer-entered)
+      card_holder_name: applicationData.cardHolderName,
+      user_id: Number(applicationData.userId),
+      mobile_number: applicationData.mobileNumber,
+      vendor: applicationData.vendor || 'VISA',
       category: applicationData.cardType.toUpperCase(), // Silver -> SILVER
       expiry_date: expiry.toISOString().slice(0, 10),
       cvv: String(Math.floor(100 + Math.random() * 900)),
+      // Section 2 — Consent & Verification
+      consent_sources: applicationData.consentSources || [],
+      otp_verified: !!applicationData.otpVerified,
+      // Section 3 — Application Metadata
+      lead_source: applicationData.leadSource,
+      sourcing_branch_code: applicationData.sourcingBranchCode,
+      // Section 4 — Document Uploads
+      kyc_document_name: applicationData.kycDocumentName,
+      income_document_name: applicationData.incomeDocumentName,
+      applicant_photo_captured: !!applicationData.applicantPhotoCaptured,
     };
 
     try {

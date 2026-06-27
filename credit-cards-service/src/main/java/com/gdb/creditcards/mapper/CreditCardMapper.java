@@ -42,6 +42,13 @@ public final class CreditCardMapper {
                 .linkedAccountNumber(card.getLinkedAccountNumber())
                 .internationalEnabled(card.getInternationalEnabled())
                 .status(card.getStatus())
+                .consentSource(card.getConsentSource())
+                .otpVerified(card.getOtpVerified())
+                .leadSource(card.getLeadSource())
+                .sourcingBranchCode(card.getSourcingBranchCode())
+                .kycDocumentName(card.getKycDocumentName())
+                .incomeDocumentName(card.getIncomeDocumentName())
+                .applicantPhotoCaptured(card.getApplicantPhotoCaptured())
                 .serviceLimits(limitViews)
                 .build();
     }

@@ -45,6 +45,15 @@ public class CreditCard {
     private Boolean internationalEnabled; // b.16
     private String status;               // ACTIVE / INACTIVE / BLOCKED (b.9)
 
+    // Admin-facing application metadata (officer-raised applications)
+    private String consentSource;        // comma-separated: PHYSICAL_FORM,DIGITAL_SIGNATURE,VERBAL_OTP
+    private Boolean otpVerified;         // applicant authorised the action via OTP
+    private String leadSource;           // BRANCH / COLD_CALL / DIGITAL_CAMPAIGN
+    private String sourcingBranchCode;   // physical branch/hub credited with the application
+    private String kycDocumentName;      // uploaded KYC scan reference
+    private String incomeDocumentName;   // uploaded income proof scan reference
+    private Boolean applicantPhotoCaptured; // live photograph / video-KYC captured
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
